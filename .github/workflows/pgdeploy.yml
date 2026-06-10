@@ -44,30 +44,33 @@ jobs:
           with:
             fetch-depth: 0
             persist-credentials: false
-        
-        # - name: install envsubst
-        #   shell: bash
-        #   run: sudo apt-get update && sudo apt-get install -y gettext-base
 
-        # - name: Login to GitHub Container Registry
-        #   uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
-        #   with:
-        #     registry: ghcr.io
-        #     username: ${{ github.actor }}
-        #     password: ${{ secrets.GITHUB_TOKEN }}
-        - name: stack config
+        - name: sanitize and config environment
           shell: bash
           run: |
+            DATA_VOLUME=$(echo "$DATA_VOLUME" | tr -d '\r')
+            CONF_VOLUME=$(echo "$CONF_VOLUME" | tr -d '\r')
+            PGUID=$(echo "${PGUID}" | tr -d '\r')
+            PGGID=$(echo "${PGGID}" | tr -d '\r')
+            STACK_NAME=$(echo "${STACK_NAME}" | tr -d '\r')
+
+            echo "DATA_VOLUME=$DATA_VOLUME" >> "$GITHUB_ENV"
+            echo "CONF_VOLUME"=$CONF_VOLUME >> "$GITHUB_ENV"
+            echo "PGUID=$PGUID" >> "$GITHUB_ENV"
+            echo "PGGID=$PGGID" >> "$GITHUB_ENV"
+            echo "STACK_NAME=$STACK_NAME" >> "GITHUB_ENV"
+
             envsubst < "${DOCKER_STACK_FILE}" | docker stack config -c -
 
         - name: stack deploy
           shell: bash
           run: |
-
-            ssh-keyscan "${HOST}" >> "$HOME/.ssh/known_hosts"
+            mkdir -p "$HOME/.ssh"
+            echo "StrictHostKeyChecking no" >> "$HOME/.ssh/config"
+            echo "UserKnownHostsFile /dev/null" >> "$HOME/.ssh/config"
 
             docker context create deploy --docker \
-            "host=ssh://${DOCKER_DEPLOY_USER}@${DOCKER_DEPLOY_HOST},key=${KEY_FILE}"           
+            "host=ssh://${USER}@${HOST}:${PORT},key=${KEY_FILE}"           
 
             docker context use deploy
             
