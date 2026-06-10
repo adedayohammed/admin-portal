@@ -40,7 +40,7 @@ jobs:
           shell: bash
           run: |
 
-            ssh-keyscan -p $"{PORT}" "${HOST}" >> "$HOME/.ssh/known_hosts"
+            ssh-keyscan -p "${PORT}" "${HOST}" >> "$HOME/.ssh/known_hosts"
 
             ssh -t -p ${PORT} -i ${SSH_KEY_FILE} ${USER}@${HOST} << EOF
             sudo mkdir -p ${DATA_VOLUME:?ERROR DATA_VOLUME NOT SET}/pgdata
