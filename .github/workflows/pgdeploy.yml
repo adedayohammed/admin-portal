@@ -21,7 +21,8 @@ jobs:
             POSTGRES_USER: ${{ vars.POSTGRES_USER }}
             POSTGRES_DB: ${{ vars.POSTGRES_DB }}
             POSTGRES_HOST: ${{ vars.POSTGRES_HOST }}
-            POSTGRES_PORT: ${{ vars.POSTGRES_PORT }}   
+            POSTGRES_PORT: ${{ vars.POSTGRES_PORT }}
+            POSTGRES_IMAGE: ${{ vars.POSTGRES_IMAGE }}
             POSTGRES_PASSWORD: ${{ vars.POSTGRES_PASSWORD }}
             APP_DB_USERNAME: ${{ vars.APP_DB_USERNAME }}
             APP_DB_PASSWORD: ${{ secrets.APP_DB_PASSWORD }}

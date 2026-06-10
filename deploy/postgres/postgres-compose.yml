@@ -1,6 +1,6 @@
 x-postgres-common:
   &postgres-common
-  image: ${{ POSTGRES_IMAGE }}
+  image: ${POSTGRES_IMAGE}
   user: ${PGUID}:${PGGID}
   restart: always
   networks:
