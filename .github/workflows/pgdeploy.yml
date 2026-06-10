@@ -75,6 +75,6 @@ jobs:
 
             docker context use deploy
             
-            envsubst < "${DOCKER_STACK_FILE}" | docker stack deploy --with-registry-auth -c - "${STACK}"
+            envsubst < "${DOCKER_STACK_FILE}" | docker stack deploy --with-registry-auth -c - "${STACK_NAME}"
             docker stack ls
-            docker stack ps "${STACK}"
+            docker stack ps "${STACK_NAME}"
