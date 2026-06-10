@@ -11,6 +11,7 @@ jobs:
             STACK_PREFIX: "prod"
             STACK: "prod-admin-portal"
             HOST: ${{ vars.DEPLOY_HOST }}
+            PORT: ${{ vars.DEPLOY_PORT }}
             USER: ${{ vars.SETUP_USER }}
             SSH_KEY: ${{ secrets.SETUP_SSH_KEY }}
             DATA_VOLUME: "${{ vars.DATA_VOLUME }}/data/postgres"
@@ -39,9 +40,9 @@ jobs:
           shell: bash
           run: |
 
-            ssh-keyscan "${HOST}" >> "$HOME/.ssh/known_hosts"
+            ssh-keyscan -p $"{PORT}" "${HOST}" >> "$HOME/.ssh/known_hosts"
 
-            ssh -t -i ${SSH_KEY_FILE} ${USER}@${HOST} << EOF
+            ssh -t -p ${PORT} -i ${SSH_KEY_FILE} ${USER}@${HOST} << EOF
             sudo mkdir -p ${DATA_VOLUME:?ERROR DATA_VOLUME NOT SET}/pgdata
             sudo mkdir -p ${CONF_VOLUME:?ERROR CONF_VOLUME NOT SET}
 
@@ -53,6 +54,6 @@ jobs:
             exit
             EOF
 
-            scp -i ${SSH_KEY_FILE} ${LOCAL_CONF}/* ${USER}@${HOST}:${CONF_VOLUME}
+            scp -P ${PORT} -i ${SSH_KEY_FILE} ${LOCAL_CONF}/* ${USER}@${HOST}:${CONF_VOLUME}
             
         
