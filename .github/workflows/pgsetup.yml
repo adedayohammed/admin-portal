@@ -42,7 +42,7 @@ jobs:
 
             ssh-keyscan -p "${PORT}" "${HOST}" >> "$HOME/.ssh/known_hosts"
 
-            ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T -p ${PORT} -i ${SSH_KEY_FILE} ${USER}@${HOST} "DATA_VOLUME='${DATA_VOLUME}' CONF_VOLUME='${CONF_VOLUME}' PGUID='${PGUID}' PGGID='${PGGID}' bash -s" << 'EOF'
+            ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -t -p ${PORT} -i ${SSH_KEY_FILE} ${USER}@${HOST} "DATA_VOLUME='${DATA_VOLUME}' CONF_VOLUME='${CONF_VOLUME}' PGUID='${PGUID}' PGGID='${PGGID}' bash -s" << 'EOF'
             sudo mkdir -p ${DATA_VOLUME:?ERROR DATA_VOLUME NOT SET}/pgdata
             sudo mkdir -p ${CONF_VOLUME:?ERROR CONF_VOLUME NOT SET}
 
