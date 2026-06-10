@@ -1,0 +1,85 @@
+name: celery deploy
+
+on:
+   workflow_dispatch:
+
+  
+    
+jobs:
+    celery-deploy:
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        runs-on: ubuntu-22.04
+        env:
+            STACK_NAME: ${{ vars.STACK_NAME }}
+            STACK: "${{ vars.STACK_NAME }}"
+            APP_IMAGE: "${{ vars.APP_IMAGE }}"
+            CELERY_HOST: ${{ vars.CELERY_HOST }}
+            REDIS_HOST: ${{ vars.REDIS_HOST }}
+            REDIS_PORT: ${{ vars.REDIS_PORT }}
+            DOCKER_STACK_FILE: "deploy/celery/celery-compose.yml"
+            HOST: ${{ vars.DEPLOY_HOST }}
+            USER: ${{ vars.DOCKER_DEPLOY_USER }}
+            SSH_KEY: ${{ secrets.DOCKER_DEPLOY_SSH_KEY }}
+
+            SECRET_KEY: ${{ secrets.SECRET_KEY }}
+            DEBUG: True  # always set this to False on staging & production environments
+            ALLOWED_HOSTS: ${{ vars.ALLOWED_HOSTS }}
+
+            FRONTEND_BASE_URL: ${{ vars.FRONTEND_BASE_URL }}
+            # PARTNER_PORTAL_WEBHOOK_URL=<partner portal app webhook>
+
+            # POSTGRES_USER=<database user>
+            # POSTGRES_PASSWORD=<database password>
+            # POSTGRES_HOST=<database host>
+            # POSTGRES_PORT=<database port>
+            # POSTGRES_DB=<database name>
+            # POSTGRES_SSLMODE=require  # set this to require
+
+            # MAILTRAP_TOKEN=<mailtrap token>
+            # EMAIL_SENDER=<mailtrap sender name>
+            # EMAIL_SENDER_NAME=<mail title/header>
+
+
+            DJANGO_ENV: ${{ vars.DJANGO_ENV }}
+            LOG_DIR_PATH: ${{ vars.LOG_DIR_PATH }}
+
+        steps:
+        - name: ssh setup
+          run: |
+            mkdir -p "$HOME/.ssh"
+            KEY_FILE="$HOME/.ssh/id_ed25519"
+
+            echo "${SSH_KEY}" > "$KEY_FILE"
+
+            echo "SSH_KEY_FILE=$KEY_FILE" >> "$GITHUB_ENV"
+
+            chmod 400 "$KEY_FILE"
+        - name: checkout code
+          uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # @v6
+          with:
+            fetch-depth: 0
+            persist-credentials: false
+        - name: stack config
+          shell: bash
+          run: |
+           
+            envsubst < "${DOCKER_STACK_FILE}" | docker stack config -c -
+        - name: ghcr login
+          uses: docker/login-action@v3
+          with:
+            registry: ghcr.io
+            username: ${{ github.actor }}
+            password: ${{ secrets.GITHUB_TOKEN }}
+        - name: stack deploy
+          shell: bash
+          run: |
+            ssh-keyscan "${HOST}" >> "$HOME/.ssh/known_hosts"
+
+            docker context create deploy --docker \
+            "host=ssh://${USER}@${HOST},key=${KEY_FILE}"           
+
+            docker context use deploy
+            
+            envsubst < "${DOCKER_STACK_FILE}" | docker stack deploy --with-registry-auth -c - "${STACK}"
+            docker stack ls
+            docker stack ps "${STACK}"

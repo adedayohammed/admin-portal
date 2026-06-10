@@ -1,0 +1,45 @@
+networks:
+  ${STACK}_infra-net:
+    external: true
+
+services:
+  ${CELERY_HOST}:
+      image: ${APP_IMAGE}
+      deploy:
+        mode: replicated
+        replicas: 1
+        restart_policy:
+          condition: any
+          delay: 10s
+      command: [ "celery", "-A", "apex", "worker", "--loglevel=info" ]
+      networks:
+        - ${STACK}_infra-net
+      environment:
+            - CELERY_BROKER_URL=redis://${REDIS_HOST}:${REDIS_PORT}/0  
+            - SECRET_KEY=${SECRET_KEY}
+            - DEBUG=${DEBUG}  # always set this to False on staging & production environments
+            - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+            - FRONTEND_BASE_URL=${FRONTEND_BASE_URL}
+            - DJANGO_ENV=${DJANGO_ENV}
+            - LOG_DIR_PATH=${LOG_DIR_PATH}
+            # PARTNER_PORTAL_WEBHOOK_URL=<partner portal app webhook>
+
+            # POSTGRES_USER=<database user>
+            # POSTGRES_PASSWORD=<database password>
+            # POSTGRES_HOST=<database host>
+            # POSTGRES_PORT=<database port>
+            # POSTGRES_DB=<database name>
+            # POSTGRES_SSLMODE=require  # set this to require
+
+            # MAILTRAP_TOKEN=<mailtrap token>
+            # EMAIL_SENDER=<mailtrap sender name>
+            # EMAIL_SENDER_NAME=<mail title/header>
+
+
+            
+      healthcheck:
+        test: ["CMD-SHELL", "celery -A apex inspect ping | grep -q 'OK'"]
+        interval: 10s
+        timeout: 5s
+        retries: 3
+        start_period: 5s

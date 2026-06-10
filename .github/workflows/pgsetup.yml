@@ -1,0 +1,58 @@
+name: postgres setup
+
+on:
+   workflow_dispatch:
+    
+jobs:
+    folder-setup:
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        runs-on: ${{ vars.GHA_UBUNTU_RUNNER }}
+        env:
+            STACK_PREFIX: "prod"
+            STACK: "prod-admin-portal"
+            HOST: ${{ vars.DEPLOY_HOST }}
+            USER: ${{ vars.SETUP_USER }}
+            SSH_KEY: ${{ secrets.SETUP_SSH_KEY }}
+            DATA_VOLUME: "${{ vars.DATA_VOLUME }}/data/postgres"
+            CONF_VOLUME: "${{ vars.DATA_VOLUME }}/conf/postgres"
+            PGUID: ${{ vars.PGUID }}
+            PGGID: ${{ vars.PGGID }}
+            LOCAL_CONF: "./deploy/postgres/conf"
+        steps:
+        - name: ssh setup
+          run: |
+            mkdir -p "$HOME/.ssh"
+            KEY_FILE="$HOME/.ssh/id_ed25519"
+
+            echo "${SSH_KEY}" > "$KEY_FILE"
+
+            echo "SSH_KEY_FILE=$KEY_FILE" >> "$GITHUB_ENV"
+
+            chmod 400 "$KEY_FILE"
+        - name: checkout code
+          uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # @v6
+          with:
+            fetch-depth: 0
+            persist-credentials: false
+
+        - name: folder setup
+          shell: bash
+          run: |
+
+            ssh-keyscan "${HOST}" >> "$HOME/.ssh/known_hosts"
+
+            ssh -t -i ${SSH_KEY_FILE} ${USER}@${HOST} << EOF
+            sudo mkdir -p ${DATA_VOLUME:?ERROR DATA_VOLUME NOT SET}/pgdata
+            sudo mkdir -p ${CONF_VOLUME:?ERROR CONF_VOLUME NOT SET}
+
+            sudo mkdir -p ${CONF_VOLUME}
+            sudo chmod -R 0777 ${CONF_VOLUME}
+
+            sudo chown -R ${PGUID}:${PGGID} ${DATA_VOLUME}
+            sudo chown -R ${PGUID}:${PGGID} ${CONF_VOLUME}
+            exit
+            EOF
+
+            scp -i ${SSH_KEY_FILE} ${LOCAL_CONF}/* ${USER}@${HOST}:${CONF_VOLUME}
+            
+        

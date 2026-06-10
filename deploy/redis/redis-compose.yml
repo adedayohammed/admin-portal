@@ -1,0 +1,23 @@
+networks:
+  ${STACK}_infra-net:
+    external: true
+
+services:
+  ${REDIS_HOST}:
+      image: ${REDIS_IMAGE}
+      deploy:
+        mode: replicated
+        replicas: 1
+        restart_policy:
+          condition: any
+          delay: 10s
+      networks:
+        - ${STACK}_infra-net
+      healthcheck:
+        test: ["CMD", "redis-cli", "ping"]
+        interval: 10s
+        timeout: 5s
+        retries: 3
+        start_period: 5s
+      ports:
+        - :${REDIS_PORT}
