@@ -42,7 +42,7 @@ jobs:
 
             ssh-keyscan -p "${PORT}" "${HOST}" >> "$HOME/.ssh/known_hosts"
 
-            ssh -t -p ${PORT} -i ${SSH_KEY_FILE} ${USER}@${HOST} << EOF
+            ssh -o StrictHostKeyChecking=no -t -p ${PORT} -i ${SSH_KEY_FILE} ${USER}@${HOST} << EOF
             sudo mkdir -p ${DATA_VOLUME:?ERROR DATA_VOLUME NOT SET}/pgdata
             sudo mkdir -p ${CONF_VOLUME:?ERROR CONF_VOLUME NOT SET}
 
@@ -54,6 +54,6 @@ jobs:
             exit
             EOF
 
-            scp -P ${PORT} -i ${SSH_KEY_FILE} ${LOCAL_CONF}/* ${USER}@${HOST}:${CONF_VOLUME}
+            scp -o StrictHostKeyChecking=no -P ${PORT} -i ${SSH_KEY_FILE} ${LOCAL_CONF}/* ${USER}@${HOST}:${CONF_VOLUME}
             
         
