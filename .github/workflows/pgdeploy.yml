@@ -71,7 +71,7 @@ jobs:
             echo "UserKnownHostsFile /dev/null" >> "$HOME/.ssh/config"
 
             docker context create deploy --docker \
-            "host=ssh://${USER}@${HOST}:${PORT}         
+            "host=ssh://${USER}@${HOST}:${PORT}"         
 
             docker context use deploy
             
