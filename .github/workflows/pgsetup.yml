@@ -39,8 +39,10 @@ jobs:
         - name: folder setup
           shell: bash
           run: |
-
-            ssh-keyscan -p "${PORT}" "${HOST}" >> "$HOME/.ssh/known_hosts"
+            DATA_VOLUME=$(echo "$DATA_VOLUME" | tr -d '\r')
+            CONF_VOLUME=$(echo "$CONF_VOLUME" | tr -d '\r')
+            PGUID=$(echo "${PGUID}" | tr -d '\r')
+            PGGID=$(echo "${PGGID}" | tr -d '\r')
 
             ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -t -p ${PORT} -i ${SSH_KEY_FILE} ${USER}@${HOST} "DATA_VOLUME='${DATA_VOLUME}' CONF_VOLUME='${CONF_VOLUME}' PGUID='${PGUID}' PGGID='${PGGID}' bash -s" << 'EOF'
             sudo mkdir -p ${DATA_VOLUME:?ERROR DATA_VOLUME NOT SET}/pgdata
