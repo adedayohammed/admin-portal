@@ -70,10 +70,8 @@ jobs:
             echo "StrictHostKeyChecking no" >> "$HOME/.ssh/config"
             echo "UserKnownHostsFile /dev/null" >> "$HOME/.ssh/config"
 
-            docker context create deploy --docker "host=ssh://${USER}@${HOST}:${PORT}"         
+            export DOCKER_HOST="ssh://${USER}@${HOST}:${PORT}"
 
-            docker context use deploy
-            
             envsubst < "${DOCKER_STACK_FILE}" | docker stack deploy --with-registry-auth -c - "${STACK_NAME}"
             docker stack ls
             docker stack ps "${STACK_NAME}"
