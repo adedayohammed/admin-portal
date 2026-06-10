@@ -55,10 +55,10 @@ jobs:
             STACK_NAME=$(echo "${STACK_NAME}" | tr -d '\r')
 
             echo "DATA_VOLUME=$DATA_VOLUME" >> "$GITHUB_ENV"
-            echo "CONF_VOLUME"=$CONF_VOLUME >> "$GITHUB_ENV"
+            echo "CONF_VOLUME=$CONF_VOLUME" >> "$GITHUB_ENV"
             echo "PGUID=$PGUID" >> "$GITHUB_ENV"
             echo "PGGID=$PGGID" >> "$GITHUB_ENV"
-            echo "STACK_NAME=$STACK_NAME" >> "GITHUB_ENV"
+            echo "STACK_NAME=$STACK_NAME" >> "$GITHUB_ENV"
 
             envsubst < "${DOCKER_STACK_FILE}" | docker stack config -c -
 
