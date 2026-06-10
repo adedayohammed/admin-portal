@@ -70,7 +70,7 @@ jobs:
             cat << EOL >> "$HOME/.ssh/config"
             Host ngrok-vbt
                 HostName ${HOST}
-                Port ${POSTGRE_PORT}
+                Port ${POSTGRES_PORT}
                 User ${USER}
                 IdentityFile ${SSH_KEY_FILE}
                 StrictHostKeyChecking no
