@@ -9,11 +9,11 @@ jobs:
         runs-on: ${{ vars.GHA_UBUNTU_RUNNER }}
         env:
             STACK_PREFIX: "prod"
-            STACK_NAME: ${{ vars.STACK_NAME }}
+            STACK_NAME: "prod-progres-stack"
             DOCKER_STACK_FILE: "deploy/postgres/postgres-compose.yml"
             HOST: ${{ vars.DEPLOY_HOST }}
-            USER: ${{ vars.DOCKER_DEPLOY_USER }}
-            SSH_KEY: ${{ secrets.DOCKER_DEPLOY_SSH_KEY }}
+            USER: ${{ vars.SETUP_USER }}
+            SSH_KEY: ${{ secrets.SETUP_SSH_KEY }}
             DATA_VOLUME: "${{ vars.DATA_VOLUME }}/data/postgres"
             CONF_VOLUME: "${{ vars.DATA_VOLUME }}/conf/postgres"
             PGUID: ${{ vars.PGUID }}
@@ -22,7 +22,7 @@ jobs:
             POSTGRES_DB: ${{ vars.POSTGRES_DB }}
             POSTGRES_HOST: ${{ vars.POSTGRES_HOST }}
             POSTGRES_PORT: ${{ vars.POSTGRES_PORT }}   
-            POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+            POSTGRES_PASSWORD: ${{ vars.POSTGRES_PASSWORD }}
             APP_DB_USERNAME: ${{ vars.APP_DB_USERNAME }}
             APP_DB_PASSWORD: ${{ secrets.APP_DB_PASSWORD }}
             APP_DB_NAME: ${{ vars.APP_DB_NAME }}
