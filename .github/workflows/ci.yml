@@ -1,0 +1,172 @@
+name: CI Run
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      docker-image:
+        description: "Docker image tag to deploy (e.g. ghcr.io/avetiumconsult/admin-partner-be:latest)"
+        required: true
+
+jobs:
+  build-and-test:
+    if: ${{ github.event_name != 'workflow_dispatch' }}
+    runs-on: ${{ vars.GHA_UBUNTU_RUNNER }}
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          # Cache pip's download cache, not the venv — Poetry manages its own
+          cache: pip
+
+      - name: Install Poetry
+        run: pip install poetry==2.1.3
+
+      # Cache the virtualenv Poetry creates so installs are fast on repeat runs.
+      # Key includes the lockfile hash — cache busts automatically on any dep change.
+      - name: Cache Poetry virtualenv
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-py3.11-${{ hashFiles('poetry.lock') }}
+
+      - name: Install dependencies
+        run: |
+          poetry config virtualenvs.in-project true
+          poetry install --no-interaction
+          
+      - name: Lint
+        run: |
+          poetry run ruff check .
+          poetry run ruff format --check .
+          
+      - name: Unit tests
+        env:
+            DJANGO_ENV: dev
+        run: poetry run pytest  # The --cov flags come from pyproject.toml
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          name: admin-portal-coverage-report
+          files: coverage.xml
+        continue-on-error: true  # don't fail the build over a coverage upload hiccup
+
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+
+      - name: Build Docker image
+        run: |
+          docker build \
+          --push \
+            -t ghcr.io/avetiumconsult/admin-partner-be:${{ github.sha }} \
+            -t ghcr.io/avetiumconsult/admin-partner-be:latest \
+            .
+
+  deploy:
+    name: Deploy to Staging
+    if: ${{ github.event_name != 'workflow_dispatch' }}
+    runs-on: ${{ vars.GHA_UBUNTU_RUNNER }}
+    needs: build-and-test  
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+              cd /home/admin-partner-be
+              git pull origin main
+              docker system prune -f
+              docker run -d --name admin-partner-be -p 8000:8000 ghcr.io/avetiumconsult/admin-partner-be:latest
+  manual-deploy:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    runs-on: ${{ vars.GHA_UBUNTU_RUNNER }}
+    env:
+      STACK_PREFIX: "prod"
+      STACK: "${{ vars.STACK_NAME }}"
+      DOMAIN: ${{ vars.DOMAIN }}
+      APP_IMAGE: "${{ vars.APP_IMAGE }}"
+      HOST: ${{ vars.DEPLOY_HOST }}
+      USER: ${{ vars.DOCKER_DEPLOY_USER }}
+      SSH_KEY: ${{ secrets.DOCKER_DEPLOY_SSH_KEY }}
+      DOCKER_STACK_FILE: "deploy/docker-stack.yml"
+      CELERY_BROKER_URL: redis://${{ vars.REDIS_HOST }}:${{ vars.REDIS_PORT }}/0
+      SECRET_KEY: ${{ secrets.SECRET_KEY }}
+      DEBUG: ${{ vars.DEBUG }}
+      ALLOWED_HOSTS: ${{ vars.ALLOWED_HOSTS }}
+      FRONTEND_BASE_URL: ${{ vars.FRONTEND_BASE_URL }}
+      DJANGO_ENV: ${{ vars.DJANGO_ENV }}
+      LOG_DIR_PATH: ${{ vars.LOG_DIR_PATH }}
+      LOG_VOLUME: "${{ vars.DATA_VOLUME }}/data/app/logs"
+      POSTGRES_USER: ${{ vars.APP_DB_USERNAME }}
+      POSTGRES_DB: ${{ vars.APP_DB_NAME }}
+      POSTGRES_HOST: ${{ vars.POSTGRES_HOST }}
+      POSTGRES_PORT: ${{ vars.POSTGRES_PORT }}   
+      POSTGRES_PASSWORD: ${{ secrets.APP_DB_PASSWORD }}
+      POSTGRES_SSLMODE: ${{ vars.POSTGRES_SSLMODE }}
+      MAILTRAP_TOKEN: ${{ secrets.MAILTRAP_TOKEN }}
+      EMAIL_SENDER: ${{ vars.EMAIL_SENDER }}
+      EMAIL_SENDER_NAME: ${{ vars.EMAIL_SENDER_NAME }}
+      PARTNER_PORTAL_WEBHOOK_URL: ${{ vars.PARTNER_PORTAL_WEBHOOK_URL }}
+    steps:
+      - name: setup deploy stack vars
+        run: |
+          mkdir -p "$HOME/.ssh"
+          KEY_FILE="$HOME/.ssh/id_ed25519"
+
+          echo "${SSH_KEY}" > "$KEY_FILE"
+
+          echo "SSH_KEY_FILE=$KEY_FILE" >> "$GITHUB_ENV"
+
+          chmod 400 "$KEY_FILE"
+      - name: checkout code
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # @v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+       
+      
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: deploy stack 
+        env:
+          APP_DOCKER_IMAGE: ${{ inputs.docker-image }}
+        shell: bash
+        run: |
+          envsubst < "${DOCKER_STACK_FILE}" | docker stack config -c -
+
+          ssh-keyscan "${HOST}" >> "$HOME/.ssh/known_hosts"
+          
+          docker context create deploy --docker \
+          "host=ssh://${USER}@${HOST},key=${KEY_FILE}"           
+
+          docker context use deploy
+          
+          envsubst < "${DOCKER_STACK_FILE}" | docker stack deploy --with-registry-auth -c - "${STACK}"
+          docker stack ls
+          docker stack ps "${STACK}"
+      

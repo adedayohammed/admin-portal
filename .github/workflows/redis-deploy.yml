@@ -1,0 +1,57 @@
+name: redis deploy
+
+on:
+   workflow_dispatch:
+
+  
+    
+jobs:
+    redis-deploy:
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        runs-on: ${{ vars.GHA_UBUNTU_RUNNER }}
+        env:
+            STACK_NAME: ${{ vars.STACK_NAME }}
+            STACK: "${{ vars.STACK_NAME }}"
+            REDIS_IMAGE: ${{ vars.REDIS_IMAGE }} 
+            REDIS_PORT: ${{ vars.REDIS_PORT }}
+            REDIS_HOST: ${{ vars.REDIS_HOST }}
+            DOCKER_STACK_FILE: "deploy/redis/redis-compose.yml"
+            HOST: ${{ vars.DEPLOY_HOST }}
+            USER: ${{ vars.DOCKER_DEPLOY_USER }}
+            SSH_KEY: ${{ secrets.DOCKER_DEPLOY_SSH_KEY }}
+
+        steps:
+        - name: ssh setup
+          run: |
+            mkdir -p "$HOME/.ssh"
+            KEY_FILE="$HOME/.ssh/id_ed25519"
+
+            echo "${SSH_KEY}" > "$KEY_FILE"
+
+            echo "SSH_KEY_FILE=$KEY_FILE" >> "$GITHUB_ENV"
+
+            chmod 400 "$KEY_FILE"
+        - name: checkout code
+          uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # @v6
+          with:
+            fetch-depth: 0
+            persist-credentials: false
+        - name: stack config
+          shell: bash
+          run: |
+           
+            envsubst < "${DOCKER_STACK_FILE}" | docker stack config -c -
+
+        - name: stack deploy
+          shell: bash
+          run: |
+            ssh-keyscan "${HOST}" >> "$HOME/.ssh/known_hosts"
+
+            docker context create deploy --docker \
+            "host=ssh://${USER}@${HOST},key=${KEY_FILE}"           
+
+            docker context use deploy
+            
+            envsubst < "${DOCKER_STACK_FILE}" | docker stack deploy --with-registry-auth -c - "${STACK}"
+            docker stack ls
+            docker stack ps "${STACK}"

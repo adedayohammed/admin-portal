@@ -1,0 +1,76 @@
+name: postgres deploy
+
+on:
+   workflow_dispatch:
+    
+jobs:
+    postgres-deploy:
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        runs-on: ${{ vars.GHA_UBUNTU_RUNNER }}
+        env:
+            STACK_PREFIX: "prod"
+            STACK_NAME: ${{ vars.STACK_NAME }}
+            DOCKER_STACK_FILE: "deploy/postgres/postgres-compose.yml"
+            HOST: ${{ vars.DEPLOY_HOST }}
+            USER: ${{ vars.DOCKER_DEPLOY_USER }}
+            SSH_KEY: ${{ secrets.DOCKER_DEPLOY_SSH_KEY }}
+            DATA_VOLUME: "${{ vars.DATA_VOLUME }}/data/postgres"
+            CONF_VOLUME: "${{ vars.DATA_VOLUME }}/conf/postgres"
+            PGUID: ${{ vars.PGUID }}
+            PGGID: ${{ vars.PGGID }}
+            POSTGRES_USER: ${{ vars.POSTGRES_USER }}
+            POSTGRES_DB: ${{ vars.POSTGRES_DB }}
+            POSTGRES_HOST: ${{ vars.POSTGRES_HOST }}
+            POSTGRES_PORT: ${{ vars.POSTGRES_PORT }}   
+            POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+            APP_DB_USERNAME: ${{ vars.APP_DB_USERNAME }}
+            APP_DB_PASSWORD: ${{ secrets.APP_DB_PASSWORD }}
+            APP_DB_NAME: ${{ vars.APP_DB_NAME }}
+
+
+        steps:
+        - name: ssh setup
+          run: |
+            mkdir -p "$HOME/.ssh"
+            KEY_FILE="$HOME/.ssh/id_ed25519"
+
+            echo "${SSH_KEY}" > "$KEY_FILE"
+
+            echo "SSH_KEY_FILE=$KEY_FILE" >> "$GITHUB_ENV"
+
+            chmod 400 "$KEY_FILE"
+        - name: checkout code
+          uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # @v6
+          with:
+            fetch-depth: 0
+            persist-credentials: false
+        
+        # - name: install envsubst
+        #   shell: bash
+        #   run: sudo apt-get update && sudo apt-get install -y gettext-base
+
+        # - name: Login to GitHub Container Registry
+        #   uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
+        #   with:
+        #     registry: ghcr.io
+        #     username: ${{ github.actor }}
+        #     password: ${{ secrets.GITHUB_TOKEN }}
+        - name: stack config
+          shell: bash
+          run: |
+            envsubst < "${DOCKER_STACK_FILE}" | docker stack config -c -
+
+        - name: stack deploy
+          shell: bash
+          run: |
+
+            ssh-keyscan "${HOST}" >> "$HOME/.ssh/known_hosts"
+
+            docker context create deploy --docker \
+            "host=ssh://${DOCKER_DEPLOY_USER}@${DOCKER_DEPLOY_HOST},key=${KEY_FILE}"           
+
+            docker context use deploy
+            
+            envsubst < "${DOCKER_STACK_FILE}" | docker stack deploy --with-registry-auth -c - "${STACK}"
+            docker stack ls
+            docker stack ps "${STACK}"

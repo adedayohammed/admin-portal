@@ -1,0 +1,33 @@
+x-postgres-common:
+  &postgres-common
+  image: ${POSTGRES_IMAGE}
+  user: ${PGUID}:${PGGID}
+  restart: always
+  networks:
+    - ${STACK_PREFIX}_infra-net
+  healthcheck:
+    test: 'pg_isready -U ${POSTGRES_USER} --dbname=${POSTGRES_DB}'
+    interval: 10s
+    timeout: 5s
+    retries: 5
+    start_period: 120s
+
+networks:
+  ${STACK_PREFIX}_infra-net:
+    external: true
+
+services:
+  ${POSTGRES_HOST}:
+    <<: *postgres-common
+    ports:
+      - ${POSTGRES_PORT}
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER?[ERROR] POSTGRES_USER NOT SET}
+      POSTGRES_DB: ${POSTGRES_DB?[ERROR] POSTGRES_DB NOT SET}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD?[ERROR] POSTGRES_PASSWORD NOT SET} 
+      APP_DB_USERNAME: ${APP_DB_USERNAME:?ERROR  APP_DB_USERNAME NOT SET}
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD:?ERROR  APP_DB_PASSWORD NOT SET}
+      APP_DB_NAME: ${APP_DB_NAME:?ERROR APP_DB_NAME NOT SET}
+    volumes:
+      - ${CONF_VOLUME:?ERROR CONF_VOLUME NOT SET!}/postgres:/docker-entrypoint-initdb.d
+      - ${DATA_VOLUME:?ERROR DATA_VOLUME NOT SET!}/postgres/pgdata:/var/lib/postgresql
