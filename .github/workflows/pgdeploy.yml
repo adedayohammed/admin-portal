@@ -80,6 +80,11 @@ jobs:
 
             export DOCKER_HOST="ssh://ngrok-vbt"
 
+            mkdir -p /home/hammed/${STACK_NAME}/data/postgres
+            mkdir -p /home/hammed/${STACK_NAME}/conf/postgres
+
+            chown -R 1000:1000 /home/hammed/${STACK_NAME}
+
             docker network inspect prod_infra-net >/dev/null 2>&1 || \
             docker network create --driver overlay prod_infra-net
 
