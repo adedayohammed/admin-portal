@@ -9,7 +9,7 @@ jobs:
         runs-on: ${{ vars.GHA_UBUNTU_RUNNER }}
         env:
             STACK_PREFIX: "prod"
-            STACK_NAME: "prod-progres-stack"
+            STACK: ${{ vars.STACK_NAME}}
             DOCKER_STACK_FILE: "deploy/postgres/postgres-compose.yml"
             HOST: ${{ vars.DEPLOY_HOST }}
             USER: ${{ vars.SETUP_USER }}
@@ -70,7 +70,7 @@ jobs:
             cat << EOL >> "$HOME/.ssh/config"
             Host ngrok-vbt
                 HostName ${HOST}
-                Port ${POSTGRES_PORT}
+                Port ${DEPLOY_PORT}
                 User ${USER}
                 IdentityFile ${SSH_KEY_FILE}
                 StrictHostKeyChecking no
