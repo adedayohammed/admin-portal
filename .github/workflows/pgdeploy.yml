@@ -17,6 +17,7 @@ jobs:
             SSH_KEY: ${{ secrets.SETUP_SSH_KEY }}
             DATA_VOLUME: "${{ vars.DATA_VOLUME }}/data/postgres"
             CONF_VOLUME: "${{ vars.DATA_VOLUME }}/conf/postgres"
+            DATA_VOL: ${{ vars.DATA_VOLUME }}
             PGUID: ${{ vars.PGUID }}
             PGGID: ${{ vars.PGGID }}
             POSTGRES_USER: ${{ vars.POSTGRES_USER }}
@@ -80,10 +81,10 @@ jobs:
 
             export DOCKER_HOST="ssh://ngrok-vbt"
 
-            mkdir -p /home/hammed/${STACK_NAME}/data/postgres
-            mkdir -p /home/hammed/${STACK_NAME}/conf/postgres
+            mkdir -p ${DATA_VOLUME}
+            mkdir -p ${CONF_VOLUME}
 
-            chown -R 1000:1000 /home/hammed/${STACK_NAME}
+            chown -R 1000:1000 ${DATA_VOL}
 
             docker network inspect prod_infra-net >/dev/null 2>&1 || \
             docker network create --driver overlay prod_infra-net
