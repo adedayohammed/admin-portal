@@ -11,7 +11,7 @@ jobs:
         runs-on: ${{ vars.GHA_UBUNTU_RUNNER }}
         env:
             STACK_NAME: "prod-admin-portal"
-            STACK: "${{ vars.STACK_NAME }}"
+            STACK: "${STACK_NAME}"
             REDIS_IMAGE: ${{ vars.REDIS_IMAGE }} 
             REDIS_PORT: ${{ vars.REDIS_PORT }}
             REDIS_HOST: ${{ vars.REDIS_HOST }}
