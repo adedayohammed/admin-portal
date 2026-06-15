@@ -10,8 +10,8 @@ jobs:
         if: ${{ github.event_name == 'workflow_dispatch' }}
         runs-on: ${{ vars.GHA_UBUNTU_RUNNER }}
         env:
-            STACK_NAME: "prod-admin-portal"
-            STACK: "${STACK_NAME}"
+            STACK: "prod-admin-portal"
+            # STACK: "${STACK_NAME}"
             REDIS_IMAGE: ${{ vars.REDIS_IMAGE }} 
             REDIS_PORT: ${{ vars.REDIS_PORT }}
             REDIS_HOST: ${{ vars.REDIS_HOST }}
