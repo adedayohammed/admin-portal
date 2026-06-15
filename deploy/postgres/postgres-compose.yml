@@ -29,5 +29,5 @@ services:
       APP_DB_PASSWORD: ${APP_DB_PASSWORD:?ERROR  APP_DB_PASSWORD NOT SET}
       APP_DB_NAME: ${APP_DB_NAME:?ERROR APP_DB_NAME NOT SET}
     volumes:
-      - ${CONF_VOLUME:?ERROR CONF_VOLUME NOT SET!}:/etc/postgres
-      - ${DATA_VOLUME:?ERROR DATA_VOLUME NOT SET!}:/var/lib/postgresql
+      - ${CONF_VOLUME:?ERROR CONF_VOLUME NOT SET!}:/etc/postgresql
+      - ${DATA_VOLUME:?ERROR DATA_VOLUME NOT SET!}:/var/lib/postgresql/data
