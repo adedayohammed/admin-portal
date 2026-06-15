@@ -10,15 +10,15 @@ jobs:
         if: ${{ github.event_name == 'workflow_dispatch' }}
         runs-on: ${{ vars.GHA_UBUNTU_RUNNER }}
         env:
-            STACK_NAME: ${{ vars.STACK_NAME }}
+            STACK_NAME: "prod-admin-portal"
             STACK: "${{ vars.STACK_NAME }}"
             REDIS_IMAGE: ${{ vars.REDIS_IMAGE }} 
             REDIS_PORT: ${{ vars.REDIS_PORT }}
             REDIS_HOST: ${{ vars.REDIS_HOST }}
             DOCKER_STACK_FILE: "deploy/redis/redis-compose.yml"
             HOST: ${{ vars.DEPLOY_HOST }}
-            USER: ${{ vars.DOCKER_DEPLOY_USER }}
-            SSH_KEY: ${{ secrets.DOCKER_DEPLOY_SSH_KEY }}
+            USER: ${{ vars.SETUP_USER }}
+            SSH_KEY: ${{ secrets.SETUP_SSH_KEY }}
 
         steps:
         - name: ssh setup
