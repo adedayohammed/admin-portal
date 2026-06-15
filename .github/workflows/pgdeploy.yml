@@ -81,10 +81,10 @@ jobs:
 
             export DOCKER_HOST="ssh://ngrok-vbt"
 
-            mkdir -p ${DATA_VOLUME}
-            mkdir -p ${CONF_VOLUME}
+            # mkdir -p ${DATA_VOLUME}
+            # mkdir -p ${CONF_VOLUME}
 
-            chown -R 1000:1000 ${DATA_VOL}
+            # chown -R 1000:1000 ${DATA_VOL}
 
             docker network inspect prod_infra-net >/dev/null 2>&1 || \
             docker network create --driver overlay prod_infra-net
