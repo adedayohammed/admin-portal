@@ -10,7 +10,7 @@ jobs:
         if: ${{ github.event_name == 'workflow_dispatch' }}
         runs-on: ${{ vars.GHA_UBUNTU_RUNNER }}
         env:
-            STACK: "prod-admin-portal"
+            STACK_NAME: ${{ vars.STACK_NAME }}
             # STACK: "${STACK_NAME}"
             REDIS_IMAGE: ${{ vars.REDIS_IMAGE }} 
             REDIS_PORT: ${{ vars.REDIS_PORT }}
@@ -52,6 +52,6 @@ jobs:
 
             docker context use deploy
             
-            envsubst < "${DOCKER_STACK_FILE}" | docker stack deploy --with-registry-auth -c - "${STACK}"
+            envsubst < "${DOCKER_STACK_FILE}" | docker stack deploy --with-registry-auth -c - "${STACK_NAME}"
             docker stack ls
-            docker stack ps "${STACK}"
+            docker stack ps "${STACK_NAME}"

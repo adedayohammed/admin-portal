@@ -9,7 +9,8 @@ jobs:
         runs-on: ${{ vars.GHA_UBUNTU_RUNNER }}
         env:
             STACK_PREFIX: "prod"
-            STACK_NAME: "prod-admin-portal"
+            STACK_NAME: ${{ vars.STACK_NAME }}
+            
             DOCKER_STACK_FILE: "deploy/postgres/postgres-compose.yml"
             HOST: ${{ vars.DEPLOY_HOST }}
             USER: ${{ vars.SETUP_USER }}
