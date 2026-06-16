@@ -49,6 +49,7 @@ jobs:
 
             # docker context create deploy --docker \
 
+            cat << EOL >> "$HOME/.ssh/config"
             Host ngrok-vbt
                 HostName ${HOST}
                 Port ${PORT}
@@ -57,6 +58,8 @@ jobs:
                 StrictHostKeyChecking no
                 UserKnownHostsFile /dev/null
             EOL
+            
+            envsubst < "${DOCKER_STACK_FILE}" | docker stack config -c -
 
             export DOCKER_HOST="ssh://ngrok-vbt"
   
