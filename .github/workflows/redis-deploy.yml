@@ -64,6 +64,9 @@ jobs:
             # "host=ssh://${USER}@${HOST},key=${KEY_FILE}"           
 
             # docker context use deploy
+
+            docker network create --driver=overlay --attachable _infra-net
+
             
             envsubst < "${DOCKER_STACK_FILE}" | docker stack deploy --with-registry-auth -c - "${STACK_NAME}"
             docker stack ls
