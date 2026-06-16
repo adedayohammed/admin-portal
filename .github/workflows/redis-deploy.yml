@@ -17,6 +17,7 @@ jobs:
             REDIS_HOST: ${{ vars.REDIS_HOST }}
             DOCKER_STACK_FILE: "deploy/redis/redis-compose.yml"
             HOST: ${{ vars.DEPLOY_HOST }}
+            PORT: ${{ vars.DEPLOY_PORT }}
             USER: ${{ vars.NEW_USER }}
             SSH_KEY: ${{ vars.NEW_SSH_KEY }}
 
@@ -58,7 +59,7 @@ jobs:
                 StrictHostKeyChecking no
                 UserKnownHostsFile /dev/null
             EOL
-            
+
             envsubst < "${DOCKER_STACK_FILE}" | docker stack config -c -
 
             export DOCKER_HOST="ssh://ngrok-vbt"
