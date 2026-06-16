@@ -17,8 +17,8 @@ jobs:
             REDIS_HOST: ${{ vars.REDIS_HOST }}
             DOCKER_STACK_FILE: "deploy/redis/redis-compose.yml"
             HOST: ${{ vars.DEPLOY_HOST }}
-            USER: ${{ vars.SETUP_USER }}
-            SSH_KEY: ${{ secrets.SETUP_SSH_KEY }}
+            USER: ${{ vars.NEW_USER }}
+            SSH_KEY: ${{ vars.NEW_SSH_KEY }}
 
         steps:
         - name: ssh setup
