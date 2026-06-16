@@ -18,8 +18,8 @@ jobs:
             DOCKER_STACK_FILE: "deploy/redis/redis-compose.yml"
             HOST: ${{ vars.DEPLOY_HOST }}
             PORT: ${{ vars.DEPLOY_PORT }}
-            USER: ${{ vars.NEW_USER }}
-            SSH_KEY: ${{ vars.NEW_SSH_KEY }}
+            USER: ${{ vars.SETUP_USER }}
+            SSH_KEY: ${{ vars.SETUP_SSH_KEY }}
 
         steps:
         - name: ssh setup
