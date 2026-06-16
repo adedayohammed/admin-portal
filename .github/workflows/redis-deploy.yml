@@ -26,7 +26,11 @@ jobs:
           run: |
             mkdir -p "$HOME/.ssh"
             KEY_FILE="$HOME/.ssh/id_ed25519"
-            echo "${SSH_KEY}" > "$KEY_FILE"
+
+            cat << 'EOF' > "$KEY_FILE"
+            ${{ env.SSH_KEY }}
+            EOF
+            
             echo "SSH_KEY_FILE=$KEY_FILE" >> "$GITHUB_ENV"
             chmod 400 "$KEY_FILE"
         - name: checkout code
@@ -65,7 +69,7 @@ jobs:
 
             # docker context use deploy
 
-            docker network inspect prod_infra-net >/dev/null 2>&1 || \
+            docker network inspect ${STACK_NAME}_infra-net >/dev/null 2>&1 || \
             docker network create --driver overlay ${STACK_NAME}_infra-net
             
             envsubst < "${DOCKER_STACK_FILE}" | docker stack deploy --with-registry-auth -c - "${STACK_NAME}"
