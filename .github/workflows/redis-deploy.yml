@@ -26,11 +26,8 @@ jobs:
           run: |
             mkdir -p "$HOME/.ssh"
             KEY_FILE="$HOME/.ssh/id_ed25519"
-
             echo "${SSH_KEY}" > "$KEY_FILE"
-
             echo "SSH_KEY_FILE=$KEY_FILE" >> "$GITHUB_ENV"
-
             chmod 400 "$KEY_FILE"
         - name: checkout code
           uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # @v6
@@ -46,11 +43,11 @@ jobs:
         - name: stack deploy
           shell: bash
           run: |
-            # ssh-keyscan "${HOST}" >> "$HOME/.ssh/known_hosts"
+            # ssh-keyscan "${HOST}" > "$HOME/.ssh/known_hosts"
 
             # docker context create deploy --docker \
 
-            cat << EOL >> "$HOME/.ssh/config"
+            cat << EOL > "$HOME/.ssh/config"
             Host ngrok-vbt
                 HostName ${HOST}
                 Port ${PORT}
@@ -60,7 +57,7 @@ jobs:
                 UserKnownHostsFile /dev/null
             EOL
 
-            envsubst < "${DOCKER_STACK_FILE}" | docker stack config -c -
+            # envsubst < "${DOCKER_STACK_FILE}" | docker stack config -c -
 
             export DOCKER_HOST="ssh://ngrok-vbt"
   
