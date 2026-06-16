@@ -45,12 +45,24 @@ jobs:
         - name: stack deploy
           shell: bash
           run: |
-            ssh-keyscan "${HOST}" >> "$HOME/.ssh/known_hosts"
+            # ssh-keyscan "${HOST}" >> "$HOME/.ssh/known_hosts"
 
-            docker context create deploy --docker \
-            "host=ssh://${USER}@${HOST},key=${KEY_FILE}"           
+            # docker context create deploy --docker \
 
-            docker context use deploy
+            Host ngrok-vbt
+                HostName ${HOST}
+                Port ${PORT}
+                User ${USER}
+                IdentityFile ${SSH_KEY_FILE}
+                StrictHostKeyChecking no
+                UserKnownHostsFile /dev/null
+            EOL
+
+            export DOCKER_HOST="ssh://ngrok-vbt"
+  
+            # "host=ssh://${USER}@${HOST},key=${KEY_FILE}"           
+
+            # docker context use deploy
             
             envsubst < "${DOCKER_STACK_FILE}" | docker stack deploy --with-registry-auth -c - "${STACK_NAME}"
             docker stack ls
