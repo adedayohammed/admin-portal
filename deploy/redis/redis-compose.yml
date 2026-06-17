@@ -1,5 +1,5 @@
 networks:
-  ${STACK}_infra-net:
+  ${STACK_NAME}_infra-net:
     external: true
 
 services:
@@ -12,7 +12,7 @@ services:
           condition: any
           delay: 10s
       networks:
-        - ${STACK}_infra-net
+        - ${STACK_NAME}_infra-net
       healthcheck:
         test: ["CMD", "redis-cli", "ping"]
         interval: 10s
@@ -20,4 +20,6 @@ services:
         retries: 3
         start_period: 5s
       ports:
-        - :${REDIS_PORT}
+        - target: 6379
+          published: ${REDIS_PORT}
+          mode: ingress

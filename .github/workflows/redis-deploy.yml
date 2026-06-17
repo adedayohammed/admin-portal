@@ -11,31 +11,35 @@ jobs:
         runs-on: ${{ vars.GHA_UBUNTU_RUNNER }}
         env:
             STACK_NAME: ${{ vars.STACK_NAME }}
-            STACK: "${{ vars.STACK_NAME }}"
+            # STACK: "${STACK_NAME}"
             REDIS_IMAGE: ${{ vars.REDIS_IMAGE }} 
             REDIS_PORT: ${{ vars.REDIS_PORT }}
             REDIS_HOST: ${{ vars.REDIS_HOST }}
             DOCKER_STACK_FILE: "deploy/redis/redis-compose.yml"
             HOST: ${{ vars.DEPLOY_HOST }}
-            USER: ${{ vars.DOCKER_DEPLOY_USER }}
-            SSH_KEY: ${{ secrets.DOCKER_DEPLOY_SSH_KEY }}
-
+            PORT: ${{ vars.DEPLOY_PORT }}
+            USER: ${{ vars.SETUP_USER }}
+            SSH_KEY: ${{ secrets.SETUP_SSH_KEY }}
+        
         steps:
+        - name: checkout code
+          uses: actions/checkout@v4
+          with:
+            fetch-depth: 0
+            persistent-credentials: false
+
         - name: ssh setup
           run: |
             mkdir -p "$HOME/.ssh"
             KEY_FILE="$HOME/.ssh/id_ed25519"
 
-            echo "${SSH_KEY}" > "$KEY_FILE"
+            cat << 'EOF' > "$KEY_FILE"
+            ${{ env.SSH_KEY }}
+            EOF
 
             echo "SSH_KEY_FILE=$KEY_FILE" >> "$GITHUB_ENV"
-
             chmod 400 "$KEY_FILE"
-        - name: checkout code
-          uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # @v6
-          with:
-            fetch-depth: 0
-            persist-credentials: false
+        
         - name: stack config
           shell: bash
           run: |
@@ -45,13 +49,31 @@ jobs:
         - name: stack deploy
           shell: bash
           run: |
-            ssh-keyscan "${HOST}" >> "$HOME/.ssh/known_hosts"
+            # ssh-keyscan "${HOST}" > "$HOME/.ssh/known_hosts"
 
-            docker context create deploy --docker \
-            "host=ssh://${USER}@${HOST},key=${KEY_FILE}"           
+            # docker context create deploy --docker \
 
-            docker context use deploy
+            cat << EOL > "$HOME/.ssh/config"
+            Host ngrok-vbt
+                HostName ${HOST}
+                Port ${PORT}
+                User ${USER}
+                IdentityFile ${SSH_KEY_FILE}
+                StrictHostKeyChecking no
+                UserKnownHostsFile /dev/null
+            EOL
+
+            export DOCKER_HOST="ssh://ngrok-vbt"
+  
+            # "host=ssh://${USER}@${HOST},key=${KEY_FILE}"           
+
+            # docker context use deploy
+
+            docker network inspect ${STACK_NAME}_infra-net >/dev/null 2>&1 || \
+            docker network create --driver overlay ${STACK_NAME}_infra-net
             
-            envsubst < "${DOCKER_STACK_FILE}" | docker stack deploy --with-registry-auth -c - "${STACK}"
+            envsubst < "${DOCKER_STACK_FILE}" | docker stack config -c -
+
+            envsubst < "${DOCKER_STACK_FILE}" | docker stack deploy --with-registry-auth -c - "${STACK_NAME}"
             docker stack ls
-            docker stack ps "${STACK}"
+            docker stack ps "${STACK_NAME}"

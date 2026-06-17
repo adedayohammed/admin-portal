@@ -10,19 +10,23 @@ jobs:
         env:
             STACK_PREFIX: "prod"
             STACK_NAME: ${{ vars.STACK_NAME }}
+            
             DOCKER_STACK_FILE: "deploy/postgres/postgres-compose.yml"
             HOST: ${{ vars.DEPLOY_HOST }}
-            USER: ${{ vars.DOCKER_DEPLOY_USER }}
-            SSH_KEY: ${{ secrets.DOCKER_DEPLOY_SSH_KEY }}
+            USER: ${{ vars.SETUP_USER }}
+            PORT: ${{ vars.DEPLOY_PORT }}
+            SSH_KEY: ${{ secrets.SETUP_SSH_KEY }}
             DATA_VOLUME: "${{ vars.DATA_VOLUME }}/data/postgres"
             CONF_VOLUME: "${{ vars.DATA_VOLUME }}/conf/postgres"
+            DATA_VOL: ${{ vars.DATA_VOLUME }}
             PGUID: ${{ vars.PGUID }}
             PGGID: ${{ vars.PGGID }}
             POSTGRES_USER: ${{ vars.POSTGRES_USER }}
             POSTGRES_DB: ${{ vars.POSTGRES_DB }}
             POSTGRES_HOST: ${{ vars.POSTGRES_HOST }}
-            POSTGRES_PORT: ${{ vars.POSTGRES_PORT }}   
-            POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+            POSTGRES_PORT: ${{ vars.POSTGRES_PORT }}
+            POSTGRES_IMAGE: ${{ vars.POSTGRES_IMAGE }}
+            POSTGRES_PASSWORD: ${{ vars.POSTGRES_PASSWORD }}
             APP_DB_USERNAME: ${{ vars.APP_DB_USERNAME }}
             APP_DB_PASSWORD: ${{ secrets.APP_DB_PASSWORD }}
             APP_DB_NAME: ${{ vars.APP_DB_NAME }}
@@ -44,33 +48,50 @@ jobs:
           with:
             fetch-depth: 0
             persist-credentials: false
-        
-        # - name: install envsubst
-        #   shell: bash
-        #   run: sudo apt-get update && sudo apt-get install -y gettext-base
 
-        # - name: Login to GitHub Container Registry
-        #   uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
-        #   with:
-        #     registry: ghcr.io
-        #     username: ${{ github.actor }}
-        #     password: ${{ secrets.GITHUB_TOKEN }}
-        - name: stack config
+        - name: sanitize and config environment
           shell: bash
           run: |
+            DATA_VOLUME=$(echo "$DATA_VOLUME" | tr -d '\r')
+            CONF_VOLUME=$(echo "$CONF_VOLUME" | tr -d '\r')
+            PGUID=$(echo "${PGUID}" | tr -d '\r')
+            PGGID=$(echo "${PGGID}" | tr -d '\r')
+            STACK_NAME=$(echo "${STACK_NAME}" | tr -d '\r')
+
+            echo "DATA_VOLUME=$DATA_VOLUME" >> "$GITHUB_ENV"
+            echo "CONF_VOLUME=$CONF_VOLUME" >> "$GITHUB_ENV"
+            echo "PGUID=$PGUID" >> "$GITHUB_ENV"
+            echo "PGGID=$PGGID" >> "$GITHUB_ENV"
+            echo "STACK_NAME=$STACK_NAME" >> "$GITHUB_ENV"
+
             envsubst < "${DOCKER_STACK_FILE}" | docker stack config -c -
 
         - name: stack deploy
           shell: bash
           run: |
+            mkdir -p "$HOME/.ssh"
+            cat << EOL >> "$HOME/.ssh/config"
+            Host ngrok-vbt
+                HostName ${HOST}
+                Port ${PORT}
+                User ${USER}
+                IdentityFile ${SSH_KEY_FILE}
+                StrictHostKeyChecking no
+                UserKnownHostsFile /dev/null
+            EOL
 
-            ssh-keyscan "${HOST}" >> "$HOME/.ssh/known_hosts"
+            ssh ngrok-vbt "sudo rm -rf ${DATA_VOLUME} && mkdir -p ${DATA_VOLUME} ${CONF_VOLUME} && sudo chown -R 1000:1000 ${DATA_VOL}"
 
-            docker context create deploy --docker \
-            "host=ssh://${DOCKER_DEPLOY_USER}@${DOCKER_DEPLOY_HOST},key=${KEY_FILE}"           
+            export DOCKER_HOST="ssh://ngrok-vbt"
 
-            docker context use deploy
-            
-            envsubst < "${DOCKER_STACK_FILE}" | docker stack deploy --with-registry-auth -c - "${STACK}"
+            # mkdir -p ${DATA_VOLUME}
+            # mkdir -p ${CONF_VOLUME}
+
+            # chown -R 1000:1000 ${DATA_VOL}
+
+            docker network inspect prod_infra-net >/dev/null 2>&1 || \
+            docker network create --driver overlay prod_infra-net
+
+            envsubst < "${DOCKER_STACK_FILE}" | docker stack deploy --with-registry-auth -c - "${STACK_NAME}"
             docker stack ls
-            docker stack ps "${STACK}"
+            docker stack ps "${STACK_NAME}"
