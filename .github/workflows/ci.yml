@@ -16,6 +16,10 @@ jobs:
     permissions:
       contents: read
       packages: write
+    
+    outputs:
+      deploy_timestamp: ${{ steps.set-time.outputs.TIMESTAMP }}
+
 
     steps:
       - name: Checkout repository
@@ -68,6 +72,10 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Generate timestamp
+        id: set-time
+        run: echo "TIMESTAMP=$(date +'%Y-%m-%d_%H-%M-%S')" >> "$GITHUB_OUTPUT"
 
 
       - name: Build Docker image
@@ -75,37 +83,39 @@ jobs:
           docker build \
           --push \
             -t ghcr.io/avetiumconsult/admin-partner-be:${{ github.sha }} \
-            -t ghcr.io/avetiumconsult/admin-partner-be:latest \
+            -t ghcr.io/avetiumconsult/admin-partner-be:{{ env.deploy_timestamp }} \
             .
 
+  # deploy:
+  #   name: Deploy to Staging
+  #   if: ${{ github.event_name != 'workflow_dispatch' }}
+  #   runs-on: ${{ vars.GHA_UBUNTU_RUNNER }}
+  #   needs: build-and-test  
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
+
+  #     - name: Deploy to EC2
+  #       uses: appleboy/ssh-action@v1.0.0
+  #       with:
+  #         host: ${{ secrets.SSH_HOST }}
+  #         username: ${{ secrets.SSH_USERNAME }}
+  #         key: ${{ secrets.SSH_PRIVATE_KEY }}
+  #         script: |
+  #             cd /home/admin-partner-be
+  #             git pull origin main
+  #             docker system prune -f
+  #             docker run -d --name admin-partner-be -p 8000:8000 ghcr.io/avetiumconsult/admin-partner-be:latest
   deploy:
     name: Deploy to Staging
     if: ${{ github.event_name != 'workflow_dispatch' }}
     runs-on: ${{ vars.GHA_UBUNTU_RUNNER }}
-    needs: build-and-test  
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Deploy to EC2
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-              cd /home/admin-partner-be
-              git pull origin main
-              docker system prune -f
-              docker run -d --name admin-partner-be -p 8000:8000 ghcr.io/avetiumconsult/admin-partner-be:latest
-  manual-deploy:
-    if: ${{ github.event_name == 'workflow_dispatch' }}
-    runs-on: ${{ vars.GHA_UBUNTU_RUNNER }}
+    needs: build-and-test
     env:
       STACK_PREFIX: "prod"
       STACK: "${{ vars.STACK_NAME }}"
       DOMAIN: ${{ vars.DOMAIN }}
-      APP_IMAGE: "${{ vars.APP_IMAGE }}"
+      APP_IMAGE: "${{ vars.APP_IMAGE }}:${{ needs.build-and-test.outputs.deploy_timestamp }}"
       HOST: ${{ vars.DEPLOY_HOST }}
       USER: ${{ vars.DOCKER_DEPLOY_USER }}
       SSH_KEY: ${{ secrets.DOCKER_DEPLOY_SSH_KEY }}
