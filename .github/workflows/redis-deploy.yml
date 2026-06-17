@@ -30,7 +30,7 @@ jobs:
             cat << 'EOF' > "$KEY_FILE"
             ${{ env.SSH_KEY }}
             EOF
-            
+
             echo "SSH_KEY_FILE=$KEY_FILE" >> "$GITHUB_ENV"
             chmod 400 "$KEY_FILE"
         - name: checkout code
@@ -69,8 +69,8 @@ jobs:
 
             # docker context use deploy
 
-            docker network inspect ${STACK_NAME}_infra-net >/dev/null 2>&1 || \
-            docker network create --driver overlay ${STACK_NAME}_infra-net
+            docker network inspect admin-portal_infra-net >/dev/null 2>&1 || \
+            docker network create --driver overlay admin-portal_infra-net
             
             envsubst < "${DOCKER_STACK_FILE}" | docker stack deploy --with-registry-auth -c - "${STACK_NAME}"
             docker stack ls
