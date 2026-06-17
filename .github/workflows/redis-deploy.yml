@@ -20,8 +20,14 @@ jobs:
             PORT: ${{ vars.DEPLOY_PORT }}
             USER: ${{ vars.SETUP_USER }}
             SSH_KEY: ${{ secrets.SETUP_SSH_KEY }}
-
+        
         steps:
+        - name: checkout code
+          uses: actions/checkout@v4
+          with:
+            fetch-depth: 0
+            persistent-credentials: false
+
         - name: ssh setup
           run: |
             mkdir -p "$HOME/.ssh"
@@ -33,11 +39,7 @@ jobs:
 
             echo "SSH_KEY_FILE=$KEY_FILE" >> "$GITHUB_ENV"
             chmod 400 "$KEY_FILE"
-        - name: checkout code
-          uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # @v6
-          with:
-            fetch-depth: 0
-            persist-credentials: false
+        
         - name: stack config
           shell: bash
           run: |
@@ -61,17 +63,17 @@ jobs:
                 UserKnownHostsFile /dev/null
             EOL
 
-            # envsubst < "${DOCKER_STACK_FILE}" | docker stack config -c -
-
             export DOCKER_HOST="ssh://ngrok-vbt"
   
             # "host=ssh://${USER}@${HOST},key=${KEY_FILE}"           
 
             # docker context use deploy
 
-            docker network inspect admin-portal_infra-net >/dev/null 2>&1 || \
-            docker network create --driver overlay admin-portal_infra-net
+            docker network inspect ${STACK_NAME}_infra-net >/dev/null 2>&1 || \
+            docker network create --driver overlay ${STACK_NAME}_infra-net
             
+            envsubst < "${DOCKER_STACK_FILE}" | docker stack config -c -
+
             envsubst < "${DOCKER_STACK_FILE}" | docker stack deploy --with-registry-auth -c - "${STACK_NAME}"
             docker stack ls
             docker stack ps "${STACK_NAME}"
