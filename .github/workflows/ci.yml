@@ -81,10 +81,10 @@ jobs:
       - name: Build Docker image
         run: |
           docker build \
-          --push \
+            --push \
             -t ghcr.io/avetiumconsult/admin-partner-be:${{ github.sha }} \
-            -t ghcr.io/avetiumconsult/admin-partner-be:{{ env.deploy_timestamp }} \
-            .
+            -t ghcr.io/avetiumconsult/admin-partner-be:${{ steps.set-time.outputs.TIMESTAMP }} \
+            -t ghcr.io/avetiumconsult/admin-partner-be:${TIMESTAMP}\
 
   # deploy:
   #   name: Deploy to Staging
@@ -115,10 +115,11 @@ jobs:
       STACK_PREFIX: "prod"
       STACK: "${{ vars.STACK_NAME }}"
       DOMAIN: ${{ vars.DOMAIN }}
+      # TIME_STAMP: ${{env.needs.build-and-test.outputs.deploy_timestamp }}
       APP_IMAGE: "${{ vars.APP_IMAGE }}:${{ needs.build-and-test.outputs.deploy_timestamp }}"
       HOST: ${{ vars.DEPLOY_HOST }}
-      USER: ${{ vars.DOCKER_DEPLOY_USER }}
-      SSH_KEY: ${{ secrets.DOCKER_DEPLOY_SSH_KEY }}
+      USER: ${{ vars.SETUP_USER }}
+      SSH_KEY: ${{ secrets.SETUP_SSH_KEY }}
       DOCKER_STACK_FILE: "deploy/docker-stack.yml"
       CELERY_BROKER_URL: redis://${{ vars.REDIS_HOST }}:${{ vars.REDIS_PORT }}/0
       SECRET_KEY: ${{ secrets.SECRET_KEY }}
@@ -134,9 +135,9 @@ jobs:
       POSTGRES_PORT: ${{ vars.POSTGRES_PORT }}   
       POSTGRES_PASSWORD: ${{ secrets.APP_DB_PASSWORD }}
       POSTGRES_SSLMODE: ${{ vars.POSTGRES_SSLMODE }}
-      MAILTRAP_TOKEN: ${{ secrets.MAILTRAP_TOKEN }}
-      EMAIL_SENDER: ${{ vars.EMAIL_SENDER }}
-      EMAIL_SENDER_NAME: ${{ vars.EMAIL_SENDER_NAME }}
+      # MAILTRAP_TOKEN: ${{ secrets.MAILTRAP_TOKEN }}
+      # EMAIL_SENDER: ${{ vars.EMAIL_SENDER }}
+      # EMAIL_SENDER_NAME: ${{ vars.EMAIL_SENDER_NAME }}
       PARTNER_PORTAL_WEBHOOK_URL: ${{ vars.PARTNER_PORTAL_WEBHOOK_URL }}
     steps:
       - name: setup deploy stack vars

@@ -38,7 +38,7 @@ jobs:
             ssh -tt -i ${SSH_KEY_FILE} ${USER}@${HOST} << EOF
             sudo mkdir -p ${LOG_VOLUME:?ERROR LOG_VOLUME NOT SET}
             sudo chmod -R 0777 ${LOG_VOLUME}
-            tree ${LOG_VOLUME}
+            # tree ${LOG_VOLUME}
             exit
             exit
             EOF
