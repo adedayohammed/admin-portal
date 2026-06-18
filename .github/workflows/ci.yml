@@ -115,7 +115,7 @@ jobs:
       STACK_PREFIX: "prod"
       STACK: "${{ vars.STACK_NAME }}"
       DOMAIN: ${{ vars.DOMAIN }}
-      TIME_STAMP: ${{env.needs.build-and-test.outputs.deploy_timestamp }
+      # TIME_STAMP: ${{env.needs.build-and-test.outputs.deploy_timestamp }}
       APP_IMAGE: "${{ vars.APP_IMAGE }}:${{ needs.build-and-test.outputs.deploy_timestamp }}"
       HOST: ${{ vars.DEPLOY_HOST }}
       USER: ${{ vars.SETUP_USER }}
