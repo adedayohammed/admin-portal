@@ -122,8 +122,7 @@ jobs:
       STACK_PREFIX: "prod"
       STACK: "${{ vars.STACK_NAME }}"
       DOMAIN: ${{ vars.DOMAIN }}
-      # TIME_STAMP: ${{env.needs.build-and-test.outputs.deploy_timestamp }}
-      APP_IMAGE: "${{ vars.APP_IMAGE }}:${{ needs.build-and-test.outputs.deploy_timestamp }}"
+      APP_IMAGE: "${{ vars.APP_IMAGE_PREFIX }}:${{ needs.build-and-test.outputs.deploy_timestamp }}"
       HOST: ${{ vars.DEPLOY_HOST }}
       USER: ${{ vars.SETUP_USER }}
       SSH_KEY: ${{ secrets.SETUP_SSH_KEY }}
@@ -149,14 +148,16 @@ jobs:
     steps:
       - name: setup deploy stack vars
         run: |
-          mkdir -p "$HOME/.ssh"
-          KEY_FILE="$HOME/.ssh/id_ed25519"
+           mkdir -p "$HOME/.ssh"
+            KEY_FILE="$HOME/.ssh/id_ed25519"
 
-          echo "${SSH_KEY}" > "$KEY_FILE"
+            cat << 'EOF' > "$KEY_FILE"
+            ${{ env.SSH_KEY }}
+            EOF
 
-          echo "SSH_KEY_FILE=$KEY_FILE" >> "$GITHUB_ENV"
-
-          chmod 400 "$KEY_FILE"
+            echo "SSH_KEY_FILE=$KEY_FILE" >> "$GITHUB_ENV"
+            chmod 400 "$KEY_FILE"
+        
       - name: checkout code
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # @v6
         with:
@@ -170,21 +171,37 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: deploy stack 
         env:
           APP_DOCKER_IMAGE: ${{ inputs.docker-image }}
         shell: bash
         run: |
-          envsubst < "${DOCKER_STACK_FILE}" | docker stack config -c -
+            # ssh-keyscan "${HOST}" > "$HOME/.ssh/known_hosts"
 
-          ssh-keyscan "${HOST}" >> "$HOME/.ssh/known_hosts"
-          
-          docker context create deploy --docker \
-          "host=ssh://${USER}@${HOST},key=${KEY_FILE}"           
+            # docker context create deploy --docker \
 
-          docker context use deploy
-          
-          envsubst < "${DOCKER_STACK_FILE}" | docker stack deploy --with-registry-auth -c - "${STACK}"
-          docker stack ls
-          docker stack ps "${STACK}"
-      
+            cat << EOL > "$HOME/.ssh/config"
+            Host ngrok-vbt
+                HostName ${HOST}
+                Port ${PORT}
+                User ${USER}
+                IdentityFile ${SSH_KEY_FILE}
+                StrictHostKeyChecking no
+                UserKnownHostsFile /dev/null
+            EOL
+
+            export DOCKER_HOST="ssh://ngrok-vbt"
+  
+            # "host=ssh://${USER}@${HOST},key=${KEY_FILE}"           
+
+            # docker context use deploy
+
+            docker network inspect ${STACK_NAME}_infra-net >/dev/null 2>&1 || \
+            docker network create --driver overlay ${STACK_NAME}_infra-net
+            
+            envsubst < "${DOCKER_STACK_FILE}" | docker stack config -c -
+
+            envsubst < "${DOCKER_STACK_FILE}" | docker stack deploy --with-registry-auth -c - "${STACK_NAME}"
+            docker stack ls
+            docker stack ps "${STACK_NAME}"
