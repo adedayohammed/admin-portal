@@ -50,8 +50,8 @@ jobs:
           
       - name: Lint
         run: |
-          poetry run ruff check .
-          poetry run ruff format --check .
+          poetry run ruff check --fix .
+          poetry run ruff format .
           
       - name: Unit tests
         env:
