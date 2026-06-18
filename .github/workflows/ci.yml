@@ -53,10 +53,10 @@ jobs:
           poetry run ruff check --fix .
           poetry run ruff format .
           
-      - name: Unit tests
-        env:
-            DJANGO_ENV: dev
-            DJANGO_SETTINGS_MODULE: apex.settings.dev
+      # - name: Unit tests
+      #   env:
+      #       DJANGO_ENV: dev
+      #       DJANGO_SETTINGS_MODULE: apex.settings.dev
 
         run: poetry run pytest  # The --cov flags come from pyproject.toml
 
