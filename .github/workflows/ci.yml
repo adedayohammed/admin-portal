@@ -53,7 +53,7 @@ jobs:
           poetry run ruff check --fix .
           poetry run ruff format .
           
-      # - name: Unit tests
+      - name: Unit tests
       #   env:
       #       DJANGO_ENV: dev
       #       DJANGO_SETTINGS_MODULE: apex.settings.dev
