@@ -88,10 +88,10 @@ jobs:
         run: |
           docker build \
             --push \
-            -t ghcr.io/avetiumconsult/admin-partner-be:${{ github.sha }} \
-            -t ghcr.io/avetiumconsult/admin-partner-be:${{ steps.set-time.outputs.TIMESTAMP }} \
+            -t ghcr.io/adedayohammed/admin-portal:${{ github.sha }} \
+            -t ghcr.io/adedayohammed/admin-portal-be:${{ steps.set-time.outputs.TIMESTAMP }} \
+            -t ghcr.io/adedayohammed/admin-portal:latest\
             .
-            # -t ghcr.io/avetiumconsult/admin-partner-be:${TIMESTAMP}\
 
   # deploy:
   #   name: Deploy to Staging
