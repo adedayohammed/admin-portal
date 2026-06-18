@@ -42,9 +42,9 @@ services:
           - POSTGRES_PORT=${POSTGRES_PORT}
           - POSTGRES_DB=${POSTGRES_DB}
           - POSTGRES_SSLMODE=${POSTGRES_SSLMODE} # set this to require
-          - MAILTRAP_TOKEN=${MAILTRAP_TOKEN}
-          - EMAIL_SENDER=${EMAIL_SENDER}
-          - EMAIL_SENDER_NAME=${EMAIL_SENDER_NAME}            
+          # - MAILTRAP_TOKEN=${MAILTRAP_TOKEN}
+          # - EMAIL_SENDER=${EMAIL_SENDER}
+          # - EMAIL_SENDER_NAME=${EMAIL_SENDER_NAME}            
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8000/api/health/ || exit 1"]
       interval: 30s
