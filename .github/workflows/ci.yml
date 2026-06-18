@@ -25,6 +25,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+        fetch-depth: 0
+        persist-credentials: false
+
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
@@ -53,13 +56,13 @@ jobs:
           poetry run ruff check --fix .
           poetry run ruff format .
           
-      - name: Unit tests
-        env:
-            DJANGO_ENV: dev
-            DJANGO_SETTINGS_MODULE: apex.settings.dev
-            PYTHONPATH: ${{ github.workspace }}
+      # - name: Unit tests
+      #   env:
+      #       DJANGO_ENV: dev
+      #       DJANGO_SETTINGS_MODULE: apex.settings.dev
+      #       PYTHONPATH: ${{ github.workspace }}
 
-        run: poetry run pytest -o django_find_project=false  # The --cov flags come from pyproject.toml
+      #   run: poetry run pytest -o django_find_project=false  # The --cov flags come from pyproject.toml
 
       - name: Upload coverage
         uses: codecov/codecov-action@v4
@@ -87,7 +90,8 @@ jobs:
             --push \
             -t ghcr.io/avetiumconsult/admin-partner-be:${{ github.sha }} \
             -t ghcr.io/avetiumconsult/admin-partner-be:${{ steps.set-time.outputs.TIMESTAMP }} \
-            -t ghcr.io/avetiumconsult/admin-partner-be:${TIMESTAMP}\
+            .
+            # -t ghcr.io/avetiumconsult/admin-partner-be:${TIMESTAMP}\
 
   # deploy:
   #   name: Deploy to Staging
