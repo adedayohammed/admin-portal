@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       docker-image:
-        description: "Docker image tag to deploy (e.g. ghcr.io/avetiumconsult/admin-partner-be:latest)"
+        description: "Docker image tag to deploy (e.g. ghcr.io/adedayohammed/admin-portal:latest)"
         required: true
 
 jobs:
