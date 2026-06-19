@@ -18,10 +18,10 @@ services:
             - CELERY_BROKER_URL=redis://${REDIS_HOST}:${REDIS_PORT}/0  
             - SECRET_KEY=${SECRET_KEY}
             - DEBUG=${DEBUG}  # always set this to False on staging & production environments
-            - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+            - ALLOWED_HOST=${ALLOWED_HOST}
             - FRONTEND_BASE_URL=${FRONTEND_BASE_URL}
             - DJANGO_ENV=${DJANGO_ENV}
-            - LOG_DIR_PATH=${LOG_DIR_PATH}
+            - LOGS_DIR_PATH=${LOGS_DIR_PATH}
             # PARTNER_PORTAL_WEBHOOK_URL=<partner portal app webhook>
 
             # POSTGRES_USER=<database user>
@@ -38,7 +38,7 @@ services:
 
             
       healthcheck:
-        test: ["CMD-SHELL", "celery -A apex inspect ping | grep -q 'OK'"]
+        test: ["CMD-SHELL", "celery_celery.worker -A apex status | grep -q 'OK'"]
         interval: 10s
         timeout: 5s
         retries: 3
