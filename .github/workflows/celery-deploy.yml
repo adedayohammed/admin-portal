@@ -20,14 +20,13 @@ jobs:
             HOST: ${{ vars.DEPLOY_HOST }}
             USER: ${{ vars.SETUP_USER }}
             SSH_KEY: ${{ secrets.SETUP_SSH_KEY }}
-
             SECRET_KEY: ${{ secrets.SECRET_KEY }}
             DEBUG: True  # always set this to False on staging & production environments
-            ALLOWED_HOSTS: ${{ vars.ALLOWED_HOSTS }}
-
+            ALLOWED_HOST: ${{ vars.ALLOWED_HOST }}
             FRONTEND_BASE_URL: ${{ vars.FRONTEND_BASE_URL }}
+            PORT: ${{ vars.DEPLOY_PORT }}
+            LOG_DIR_PATH: ${{ vars.LOG_DIR_PATH }}
             # PARTNER_PORTAL_WEBHOOK_URL=<partner portal app webhook>
-
             # POSTGRES_USER=<database user>
             # POSTGRES_PASSWORD=<database password>
             # POSTGRES_HOST=<database host>
