@@ -13,7 +13,7 @@ services:
           delay: 10s
       command: [ "celery", "-A", "apex", "worker", "--loglevel=info" ]
       networks:
-        - ${STACK}_infra-net
+        - ${STACK_NAME}_infra-net
       environment:
             - CELERY_BROKER_URL=redis://${REDIS_HOST}:${REDIS_PORT}/0  
             - SECRET_KEY=${SECRET_KEY}
