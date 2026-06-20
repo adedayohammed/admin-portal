@@ -56,13 +56,13 @@ jobs:
           poetry run ruff check --fix .
           poetry run ruff format .
           
-      # - name: Unit tests
-      #   env:
-      #       DJANGO_ENV: dev
-      #       DJANGO_SETTINGS_MODULE: apex.settings.dev
-      #       PYTHONPATH: ${{ github.workspace }}
+      - name: Unit tests
+        env:
+            DJANGO_ENV: dev
+            DJANGO_SETTINGS_MODULE: apex.settings.dev
+            PYTHONPATH: ${{ github.workspace }}
 
-      #   run: poetry run pytest -o django_find_project=false  # The --cov flags come from pyproject.toml
+        run: poetry run pytest -o django_find_project=false  # The --cov flags come from pyproject.toml
 
       - name: Upload coverage
         uses: codecov/codecov-action@v4
