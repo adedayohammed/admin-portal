@@ -1,7 +1,7 @@
 [project]
 name = "admin-portal-app"
 version = "0.1.0"
-description = "Avetium Admin Portal."
+description = "Admin Portal."
 authors = [
     {name = "peter-mbachu",email = "peter.mbachu@avetiumconsult.com"}
 ]
