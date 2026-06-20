@@ -62,7 +62,7 @@ jobs:
             DJANGO_SETTINGS_MODULE: apex.settings.dev
             PYTHONPATH: ${{ github.workspace }}
 
-        run: poetry run pytest -o django_find_project=false  # The --cov flags come from pyproject.toml
+        run: poetry run pytest -o django_find_project=true  # The --cov flags come from pyproject.toml
 
       - name: Upload coverage
         uses: codecov/codecov-action@v4
