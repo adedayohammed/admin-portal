@@ -91,7 +91,7 @@ jobs:
 
             export DOCKER_HOST="ssh://ngrok-vbt"
             
-            ssh ngrok-vbt "mkdir -p ${LOGS_DIR_PATH}"
+            ssh ngrok-vbt "sudo mkdir -p ${LOGS_DIR_PATH} && sudo chmod -R 777 ${LOGS_DIR_PATH}"
 
             docker network inspect ${STACK_NAME}_infra-net >/dev/null 2>&1 || \
             docker network create --driver overlay ${STACK_NAME}_infra-net
