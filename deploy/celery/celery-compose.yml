@@ -32,7 +32,6 @@ services:
             - POSTGRES_PORT=${POSTGRES_PORT}
             - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
             # PARTNER_PORTAL_WEBHOOK_URL=<partner portal app webhook>
-
             # POSTGRES_USER=<database user>
             # POSTGRES_PASSWORD=<database password>
             # POSTGRES_HOST=<database host>

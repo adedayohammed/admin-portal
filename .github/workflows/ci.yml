@@ -23,9 +23,9 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
-
-        # fetch-depth: 0
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd   #v6.0.2
+        with:
+          fetch-depth: 0
         # persist-credentials: false
 
       - name: Set up Python 3.11
@@ -37,6 +37,14 @@ jobs:
 
       - name: Install Poetry
         run: pip install poetry==2.1.3
+      # Validate pyproject.toml
+
+      - name: Validate Poetry configuration
+        run: poetry check
+
+      # Verify pyproject.toml and poetry.lock files are in sync
+      - name: Verify Poetry lock file
+        run: poetry check --lock
 
       # Cache the virtualenv Poetry creates so installs are fast on repeat runs.
       # Key includes the lockfile hash — cache busts automatically on any dep change.
@@ -53,16 +61,19 @@ jobs:
           
       - name: Lint
         run: |
-          poetry run ruff check --fix .
-          poetry run ruff format .
-          
+          poetry run ruff check .
+          poetry run ruff format --check .
+
+      - name: Run Super-Linter v8.6.0
+        uses: super-linter/super-linter@9e863354e3ff62e0727d37183162c4a88873df41  #v8.6.0
+        env:
+          GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
+          DISABLE_ERRORS: true  
+
       - name: Unit tests
         env:
             DJANGO_ENV: dev
-            DJANGO_SETTINGS_MODULE: apex.settings.dev
-            PYTHONPATH: ${{ github.workspace }}
-
-        run: poetry run pytest -o django_find_project=true -o pythonpath=src # The --cov flags come from pyproject.toml
+        run: poetry run pytest
 
       - name: Upload coverage
         uses: codecov/codecov-action@v4
@@ -93,31 +104,10 @@ jobs:
             -t ghcr.io/adedayohammed/admin-portal:latest\
             .
 
-  # deploy:
-  #   name: Deploy to Staging
-  #   if: ${{ github.event_name != 'workflow_dispatch' }}
-  #   runs-on: ${{ vars.GHA_UBUNTU_RUNNER }}
-  #   needs: build-and-test  
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v4
-
-  #     - name: Deploy to EC2
-  #       uses: appleboy/ssh-action@v1.0.0
-  #       with:
-  #         host: ${{ secrets.SSH_HOST }}
-  #         username: ${{ secrets.SSH_USERNAME }}
-  #         key: ${{ secrets.SSH_PRIVATE_KEY }}
-  #         script: |
-  #             cd /home/admin-partner-be
-  #             git pull origin main
-  #             docker system prune -f
-  #             docker run -d --name admin-partner-be -p 8000:8000 ghcr.io/avetiumconsult/admin-partner-be:latest
-  deploy:
-    name: Deploy to Staging
+    deploy:
     if: ${{ github.event_name != 'workflow_dispatch' }}
     runs-on: ${{ vars.GHA_UBUNTU_RUNNER }}
-    needs: build-and-test
+    needs: ["build-and-test"]
     env:
       STACK_PREFIX: "prod"
       STACK: "${{ vars.STACK_NAME }}"
@@ -205,3 +195,96 @@ jobs:
             envsubst < "${DOCKER_STACK_FILE}" | docker stack deploy --with-registry-auth -c - "${STACK_NAME}"
             docker stack ls
             docker stack ps "${STACK_NAME}"
+
+    deploy:
+    name: manual-deploy:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    runs-on: ${{ vars.GHA_UBUNTU_RUNNER }}
+    env:
+      STACK_PREFIX: "prod"
+      STACK: "${{ vars.STACK_NAME }}"
+      DOMAIN: ${{ vars.DOMAIN }}
+      APP_IMAGE: "${{ vars.APP_IMAGE_PREFIX }}:${{ needs.build-and-test.outputs.deploy_timestamp }}"
+      HOST: ${{ vars.DEPLOY_HOST }}
+      USER: ${{ vars.SETUP_USER }}
+      SSH_KEY: ${{ secrets.SETUP_SSH_KEY }}
+      DOCKER_STACK_FILE: "deploy/docker-stack.yml"
+      CELERY_BROKER_URL: redis://${{ vars.REDIS_HOST }}:${{ vars.REDIS_PORT }}/0
+      SECRET_KEY: ${{ secrets.SECRET_KEY }}
+      DEBUG: ${{ vars.DEBUG }}
+      ALLOWED_HOSTS: ${{ vars.ALLOWED_HOSTS }}
+      FRONTEND_BASE_URL: ${{ vars.FRONTEND_BASE_URL }}
+      DJANGO_ENV: ${{ vars.DJANGO_ENV }}
+      LOG_DIR_PATH: ${{ vars.LOG_DIR_PATH }}
+      LOG_VOLUME: "${{ vars.DATA_VOLUME }}/data/app/logs"
+      POSTGRES_USER: ${{ vars.APP_DB_USERNAME }}
+      POSTGRES_DB: ${{ vars.APP_DB_NAME }}
+      POSTGRES_HOST: ${{ vars.POSTGRES_HOST }}
+      POSTGRES_PORT: ${{ vars.POSTGRES_PORT }}   
+      POSTGRES_PASSWORD: ${{ secrets.APP_DB_PASSWORD }}
+      POSTGRES_SSLMODE: ${{ vars.POSTGRES_SSLMODE }}
+      # MAILTRAP_TOKEN: ${{ secrets.MAILTRAP_TOKEN }}
+      # EMAIL_SENDER: ${{ vars.EMAIL_SENDER }}
+      # EMAIL_SENDER_NAME: ${{ vars.EMAIL_SENDER_NAME }}
+      PARTNER_PORTAL_WEBHOOK_URL: ${{ vars.PARTNER_PORTAL_WEBHOOK_URL }}
+    steps:
+      - name: setup deploy stack vars
+        run: |
+          mkdir -p "$HOME/.ssh"
+          KEY_FILE="$HOME/.ssh/id_ed25519"
+
+          cat << 'EOF' > "$KEY_FILE"
+          ${{ env.SSH_KEY }}
+          EOF
+
+          echo "SSH_KEY_FILE=$KEY_FILE" >> "$GITHUB_ENV"
+          chmod 400 "$KEY_FILE"
+              
+      - name: checkout code
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # @v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+            
+            
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: deploy stack 
+        env:
+          APP_DOCKER_IMAGE: ${{ inputs.docker-image }}
+        shell: bash
+        run: |
+            # ssh-keyscan "${HOST}" > "$HOME/.ssh/known_hosts"
+
+            # docker context create deploy --docker \
+
+            cat << EOL > "$HOME/.ssh/config"
+            Host ngrok-vbt
+                HostName ${HOST}
+                Port ${PORT}
+                User ${USER}
+                IdentityFile ${SSH_KEY_FILE}
+                StrictHostKeyChecking no
+                UserKnownHostsFile /dev/null
+            EOL
+
+            export DOCKER_HOST="ssh://ngrok-vbt"
+  
+            # "host=ssh://${USER}@${HOST},key=${KEY_FILE}"           
+
+            # docker context use deploy
+
+            docker network inspect ${STACK_NAME}_infra-net >/dev/null 2>&1 || \
+            docker network create --driver overlay ${STACK_NAME}_infra-net
+            
+            envsubst < "${DOCKER_STACK_FILE}" | docker stack config -c -
+
+            envsubst < "${DOCKER_STACK_FILE}" | docker stack deploy --with-registry-auth -c - "${STACK_NAME}"
+            docker stack ls
+            docker stack ps "${STACK_NAME}"
+
