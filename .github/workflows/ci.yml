@@ -104,7 +104,7 @@ jobs:
             -t ghcr.io/adedayohammed/admin-portal:latest\
             .
 
-    deploy:
+  deploy:
     if: ${{ github.event_name != 'workflow_dispatch' }}
     runs-on: ${{ vars.GHA_UBUNTU_RUNNER }}
     needs: ["build-and-test"]
@@ -196,7 +196,7 @@ jobs:
             docker stack ls
             docker stack ps "${STACK_NAME}"
 
-    manual-deploy:
+  manual-deploy:
     if: ${{ github.event_name == 'workflow_dispatch' }}
     runs-on: ${{ vars.GHA_UBUNTU_RUNNER }}
     env:
