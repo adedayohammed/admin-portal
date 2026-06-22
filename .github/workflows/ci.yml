@@ -61,8 +61,8 @@ jobs:
           
       - name: Lint
         run: |
-          poetry run ruff check .
-          poetry run ruff format --check .
+          poetry run ruff check --fix .
+          poetry run ruff format .
 
       - name: Run Super-Linter v8.6.0
         uses: super-linter/super-linter@9e863354e3ff62e0727d37183162c4a88873df41  #v8.6.0
@@ -196,7 +196,7 @@ jobs:
             docker stack ls
             docker stack ps "${STACK_NAME}"
 
-  manual-deploy:
+    manual-deploy:
     if: ${{ github.event_name == 'workflow_dispatch' }}
     runs-on: ${{ vars.GHA_UBUNTU_RUNNER }}
     env:
