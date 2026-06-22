@@ -10,7 +10,6 @@ jobs:
         env:
             STACK_PREFIX: "prod"
             STACK_NAME: ${{ vars.STACK_NAME }}
-            
             DOCKER_STACK_FILE: "deploy/postgres/postgres-compose.yml"
             HOST: ${{ vars.DEPLOY_HOST }}
             USER: ${{ vars.SETUP_USER }}
@@ -80,7 +79,7 @@ jobs:
                 UserKnownHostsFile /dev/null
             EOL
 
-            ssh ngrok-vbt "sudo rm -rf ${DATA_VOLUME} && mkdir -p ${DATA_VOLUME} ${CONF_VOLUME} && sudo chown -R 1000:1000 ${DATA_VOL}"
+            ssh ngrok-vbt "sudo mkdir -p ${DATA_VOLUME} ${CONF_VOLUME} && sudo chown -R 1000:1000 ${DATA_VOL}"
 
             export DOCKER_HOST="ssh://ngrok-vbt"
 
