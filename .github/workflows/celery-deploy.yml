@@ -30,7 +30,7 @@ jobs:
             POSTGRES_USER: ${{ vars.POSTGRES_USER }}
             POSTGRES_DB: ${{ vars.POSTGRES_DB }}
             POSTGRES_HOST: ${{ vars.POSTGRES_HOST }}
-            POSTGRES_PORT: ${{ vars.POSTGRES_PORT }}
+            POSTGRES_PORT: "5432"
             POSTGRES_PASSWORD: ${{ vars.POSTGRES_PASSWORD }}
             # PARTNER_PORTAL_WEBHOOK_URL=<partner portal app webhook>
             # POSTGRES_USER=<database user>
