@@ -79,7 +79,7 @@ jobs:
                 UserKnownHostsFile /dev/null
             EOL
 
-            ssh ngrok-vbt "sudo rm -rf ${DATA_VOLUME} && mkdir -p ${DATA_VOLUME} ${CONF_VOLUME} && sudo chown -R 1000:1000 ${DATA_VOL}"
+            ssh ngrok-vbt "sudo mkdir -p ${DATA_VOLUME} ${CONF_VOLUME} && sudo chown -R 1000:1000 ${DATA_VOL}"
 
             export DOCKER_HOST="ssh://ngrok-vbt"
 
