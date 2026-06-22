@@ -1,0 +1,35 @@
+# ruff.toml
+
+target-version = "py312"
+line-length = 100
+extend-exclude = ["migrations", "venv", ".venv", "*_venv"]
+
+[lint]
+# Enable key rule sets for DRF/Django
+select = [
+    "E",  # pycodestyle errors
+    "F",  # pyflakes
+    "I",  # isort-style import sorting
+    "D",  # pydocstyle
+    "UP", # pyupgrade
+    "B",  # flake8-bugbear
+    "DJ", # Django-specific linting
+]
+ignore = [
+    "D100", "D101", "D102", "D103", "D104", "D105", "D106", "D107", # missing docstrings
+    "D203",                         # ignore blank line before class
+    "D213",                         # ignore multi-line summary second line
+    "DJ001", "DJ008",               # common DRF false positives
+    "E501",                         # line length
+    "F403",                         # wildcard import
+]
+
+[lint.per-file-ignores]
+"*/migrations/*" = ["ALL"]
+"**/apps.py" = ["F401"]
+
+[format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
+skip-magic-trailing-comma = false
