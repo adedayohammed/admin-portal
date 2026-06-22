@@ -27,7 +27,11 @@ jobs:
             PORT: ${{ vars.DEPLOY_PORT }}
             LOGS_DIR_PATH: ${{ vars.LOGS_DIR_PATH }}
             DJANGO_ENV: ${{ vars.DJANGO_ENV }}
-
+            POSTGRES_USER: ${{ vars.POSTGRES_USER }}
+            POSTGRES_DB: ${{ vars.POSTGRES_DB }}
+            POSTGRES_HOST: ${{ vars.POSTGRES_HOST }}
+            POSTGRES_PORT: ${{ vars.POSTGRES_PORT }}
+            POSTGRES_PASSWORD: ${{ vars.POSTGRES_PASSWORD }}
             # PARTNER_PORTAL_WEBHOOK_URL=<partner portal app webhook>
             # POSTGRES_USER=<database user>
             # POSTGRES_PASSWORD=<database password>
@@ -86,20 +90,12 @@ jobs:
             EOL
 
             export DOCKER_HOST="ssh://ngrok-vbt"
+            
+            ssh ngrok-vbt "mkdir -p ${LOGS_DIR_PATH}"
 
             docker network inspect ${STACK_NAME}_infra-net >/dev/null 2>&1 || \
             docker network create --driver overlay ${STACK_NAME}_infra-net
-            
-            #envsubst < "${DOCKER_STACK_FILE}" | docker stack config -c -
-
-
-            # ssh-keyscan "${HOST}" >> "$HOME/.ssh/known_hosts"
-
-            # docker context create deploy --docker \
-            # "host=ssh://${USER}@${HOST},key=${KEY_FILE}"           
-
-            # docker context use deploy
-            
+                      
             envsubst < "${DOCKER_STACK_FILE}" | docker stack deploy --with-registry-auth -c - "${STACK_NAME}"
             docker stack ls
             docker stack ps "${STACK_NAME}"
