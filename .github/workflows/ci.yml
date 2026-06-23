@@ -101,7 +101,7 @@ jobs:
             --push \
             -t ghcr.io/adedayohammed/admin-portal:${{ github.sha }} \
             -t ghcr.io/adedayohammed/admin-portal-be:${{ steps.set-time.outputs.TIMESTAMP }} \
-            -t ghcr.io/adedayohammed/admin-portal:latest\
+            -t ghcr.io/adedayohammed/admin-portal:latest \
             .
 
   deploy:
