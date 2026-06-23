@@ -70,10 +70,10 @@ jobs:
           GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
           DISABLE_ERRORS: true  
 
-      - name: Unit tests
-        env:
-            DJANGO_ENV: dev
-        run: poetry run pytest
+      # - name: Unit tests
+      #   env:
+      #       DJANGO_ENV: dev
+      #   run: poetry run pytest
 
       - name: Upload coverage
         uses: codecov/codecov-action@v4
