@@ -44,8 +44,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 # Runtime system dependencies only (no compilers)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq5 \
-    postgresql-client \ 
-    curl \ 
+    postgresql-client \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Create a non-root user for security — never run as root in containers
