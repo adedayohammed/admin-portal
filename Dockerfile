@@ -7,7 +7,6 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     POETRY_VERSION=2.1.3 \
     POETRY_HOME="/opt/poetry" \
-    # POETRY_VIRTUALENVS_IN_PROJECT=true \
     POETRY_NO_INTERACTION=1
 
 # Install system build dependencies
