@@ -157,7 +157,7 @@ jobs:
             chmod 400 "$KEY_FILE"
         
       - name: stack config
-          shell: bash
+        shell: bash
           run: |
            
             envsubst < "${DOCKER_STACK_FILE}" | docker stack config -c -
