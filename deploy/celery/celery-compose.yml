@@ -5,13 +5,14 @@ networks:
 services:
   celery_worker:
       image: ${APP_IMAGE}
+      entrypoint: []
       deploy:
         mode: replicated
         replicas: 1
         restart_policy:
           condition: any
           delay: 10s
-      command: [ "celery", "-A", "apex", "worker", "--loglevel=info" ]
+      command: [ "python", "-m", "celery", "-A", "apex", "worker", "--loglevel=info" ]
       networks:
         - ${STACK_NAME}_infra-net
       volumes:
