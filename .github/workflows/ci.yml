@@ -120,10 +120,10 @@ jobs:
       CELERY_BROKER_URL: redis://${{ vars.REDIS_HOST }}:${{ vars.REDIS_PORT }}/0
       SECRET_KEY: ${{ secrets.SECRET_KEY }}
       DEBUG: ${{ vars.DEBUG }}
-      ALLOWED_HOSTS: ${{ vars.ALLOWED_HOSTS }}
+      ALLOWED_HOST: ${{ vars.ALLOWED_HOST }}
       FRONTEND_BASE_URL: ${{ vars.FRONTEND_BASE_URL }}
       DJANGO_ENV: ${{ vars.DJANGO_ENV }}
-      LOG_DIR_PATH: ${{ vars.LOG_DIR_PATH }}
+      LOGS_DIR_PATH: ${{ vars.LOGS_DIR_PATH }}
       LOG_VOLUME: "${{ vars.DATA_VOLUME }}/data/app/logs"
       POSTGRES_USER: ${{ vars.APP_DB_USERNAME }}
       POSTGRES_DB: ${{ vars.APP_DB_NAME }}
@@ -187,14 +187,14 @@ jobs:
 
             # docker context use deploy
 
-            docker network inspect ${STACK_NAME}_infra-net >/dev/null 2>&1 || \
-            docker network create --driver overlay ${STACK_NAME}_infra-net
+            docker network inspect ${STACK}_infra-net >/dev/null 2>&1 || \
+            docker network create --driver overlay ${STACK}_infra-net
             
             envsubst < "${DOCKER_STACK_FILE}" | docker stack config -c -
 
-            envsubst < "${DOCKER_STACK_FILE}" | docker stack deploy --with-registry-auth -c - "${STACK_NAME}"
+            envsubst < "${DOCKER_STACK_FILE}" | docker stack deploy --with-registry-auth -c - "${STACK}"
             docker stack ls
-            docker stack ps "${STACK_NAME}"
+            docker stack ps "${STACK}"
 
   manual-deploy:
     if: ${{ github.event_name == 'workflow_dispatch' }}

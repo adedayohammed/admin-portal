@@ -30,10 +30,10 @@ services:
           - CELERY_BROKER_URL=${CELERY_BROKER_URL}  
           - SECRET_KEY=${SECRET_KEY}
           - DEBUG=${DEBUG}  # always set this to False on staging & production environments
-          - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+          - ALLOWED_HOST=${ALLOWED_HOST}
           - FRONTEND_BASE_URL=${FRONTEND_BASE_URL}
           - DJANGO_ENV=${DJANGO_ENV}
-          - LOG_DIR_PATH=${LOG_DIR_PATH}
+          - LOGS_DIR_PATH=${LOGS_DIR_PATH}
           - LOG_VOLUME=${LOG_VOLUME}
           - PARTNER_PORTAL_WEBHOOK_URL=${PARTNER_PORTAL_WEBHOOK_URL}
           - POSTGRES_USER=${POSTGRES_USER}
