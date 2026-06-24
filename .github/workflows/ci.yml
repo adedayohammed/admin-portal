@@ -137,6 +137,13 @@ jobs:
       # EMAIL_SENDER_NAME: ${{ vars.EMAIL_SENDER_NAME }}
       PARTNER_PORTAL_WEBHOOK_URL: ${{ vars.PARTNER_PORTAL_WEBHOOK_URL }}
     steps:
+
+      - name: checkout code
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # @v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
       - name: setup deploy stack vars
         run: |
            mkdir -p "$HOME/.ssh"
@@ -149,12 +156,6 @@ jobs:
             echo "SSH_KEY_FILE=$KEY_FILE" >> "$GITHUB_ENV"
             chmod 400 "$KEY_FILE"
         
-      - name: checkout code
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # @v6
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-
       - name: stack config
           shell: bash
           run: |
