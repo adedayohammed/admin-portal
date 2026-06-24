@@ -10,6 +10,7 @@ jobs:
         env:
             HOST: ${{ vars.DEPLOY_HOST }}
             USER: ${{ vars.SETUP_USER }}
+            PORT: ${{ vars.DEPLOY_PORT }}
             SSH_KEY: ${{ secrets.SETUP_SSH_KEY }}
             LOG_VOLUME: "${{ vars.DATA_VOLUME }}/data/app/logs"
         steps:
