@@ -136,8 +136,8 @@ jobs:
       # EMAIL_SENDER: ${{ vars.EMAIL_SENDER }}
       # EMAIL_SENDER_NAME: ${{ vars.EMAIL_SENDER_NAME }}
       PARTNER_PORTAL_WEBHOOK_URL: ${{ vars.PARTNER_PORTAL_WEBHOOK_URL }}
+   
     steps:
-
       - name: checkout code
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # @v6
         with:
@@ -170,8 +170,8 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: deploy stack 
-        env:
-          APP_DOCKER_IMAGE: ${{ inputs.docker-image }}
+        # env:
+        #   APP_DOCKER_IMAGE: ${{ inputs.docker-image }}
         shell: bash
         run: |
             # ssh-keyscan "${HOST}" > "$HOME/.ssh/known_hosts"
@@ -189,7 +189,9 @@ jobs:
             EOL
 
             export DOCKER_HOST="ssh://ngrok-vbt"
-  
+
+            ssh ngrok-vbt "sudo mkdir -p ${LOGS_DIR_PATH} && sudo chmod -R 777 ${LOGS_DIR_PATH}"
+
             # "host=ssh://${USER}@${HOST},key=${KEY_FILE}"           
 
             # docker context use deploy
