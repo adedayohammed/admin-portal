@@ -287,12 +287,12 @@ jobs:
 
             # docker context use deploy
 
-            docker network inspect ${STACK_NAME}_infra-net >/dev/null 2>&1 || \
-            docker network create --driver overlay ${STACK_NAME}_infra-net
+            docker network inspect ${STACK}_infra-net >/dev/null 2>&1 || \
+            docker network create --driver overlay ${STACK}_infra-net
             
             envsubst < "${DOCKER_STACK_FILE}" | docker stack config -c -
 
-            envsubst < "${DOCKER_STACK_FILE}" | docker stack deploy --with-registry-auth -c - "${STACK_NAME}"
+            envsubst < "${DOCKER_STACK_FILE}" | docker stack deploy --with-registry-auth -c - "${STACK}"
             docker stack ls
-            docker stack ps "${STACK_NAME}"
+            docker stack ps "${STACK}"
 
