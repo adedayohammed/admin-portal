@@ -7,7 +7,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     POETRY_VERSION=2.1.3 \
     POETRY_HOME="/opt/poetry" \
-    POETRY_NO_INTERACTION=1
+    POETRY_NO_INTERACTION=1 \
+    POETRY_VIRTUALENVS_IN_PROJECT=1 \
+    POETRY_VIRTUALENVS_CREATE=true
 
 # Install system build dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -23,22 +25,21 @@ ENV PATH="$POETRY_HOME/bin:$PATH"
 WORKDIR /app
 
 # Copy only dependency files first (better layer caching)
-# If pyproject.toml hasn't changed, this layer is reused even if code changed
 COPY pyproject.toml poetry.lock* ./
 
-# 🚨 IMPORTANT: install into system python (NO venv)
-RUN poetry config virtualenvs.create false \
-    && poetry install --no-root --no-interaction
+# Install python dependencies (WITH virtual environment for clean portability)
+RUN poetry install --no-root --no-interaction
 
 # Check if celery dependency is installed
-RUN python -c "import celery; print('Celery OK:', celery.__version__)"
+RUN /app/.venv/bin/python -c "import celery; print('Celery OK:', celery.__version__)"
 
 # ── Stage 2: Runtime ──────────────────────────────────────────────────────────
 FROM python:3.11.9-slim AS runtime
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    # PATH="/app/.venv/bin:$PATH"
+    VIRTUAL_ENV="/app/.venv" \
+    PATH="/app/.venv/bin:$PATH"
 
 # Runtime system dependencies only (no compilers)
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -54,8 +55,7 @@ RUN groupadd --gid 1001 appgroup && \
 WORKDIR /app
 
 # Copy installed packages from builder (system site-packages. This avoids needing Poetry in runtime)
-COPY --from=builder /usr/local/lib/python3.11 /usr/local/lib/python3.11
-COPY --from=builder /usr/local/bin /usr/local/bin
+COPY --from=builder --chown=appuser:appgroup /app/.venv /app/.venv
 
 # Copy application source
 COPY --chown=appuser:appgroup . .
