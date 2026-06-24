@@ -217,7 +217,7 @@ jobs:
       USER: ${{ vars.SETUP_USER }}
       PORT: ${{ vars.DEPLOY_PORT }}
       SSH_KEY: ${{ secrets.SETUP_SSH_KEY }}
-      DOCKER_STACK_FILE: "./deploy/docker-stack.yml"
+      DOCKER_STACK_FILE: "deploy/docker-stack.yml"
       CELERY_BROKER_URL: redis://${{ vars.REDIS_HOST }}:${{ vars.REDIS_PORT }}/0
       SECRET_KEY: ${{ secrets.SECRET_KEY }}
       DEBUG: ${{ vars.DEBUG }}
@@ -237,6 +237,13 @@ jobs:
       # EMAIL_SENDER_NAME: ${{ vars.EMAIL_SENDER_NAME }}
       PARTNER_PORTAL_WEBHOOK_URL: ${{ vars.PARTNER_PORTAL_WEBHOOK_URL }}
     steps:
+
+      - name: checkout code
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # @v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
       - name: setup deploy stack vars
         run: |
           mkdir -p "$HOME/.ssh"
@@ -248,12 +255,6 @@ jobs:
 
           echo "SSH_KEY_FILE=$KEY_FILE" >> "$GITHUB_ENV"
           chmod 400 "$KEY_FILE"
-              
-      - name: checkout code
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # @v6
-        with:
-          fetch-depth: 0
-          persist-credentials: false
                  
       - name: Login to GitHub Container Registry
         uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
