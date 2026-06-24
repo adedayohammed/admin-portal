@@ -115,6 +115,7 @@ jobs:
       APP_IMAGE: "${{ vars.APP_IMAGE_PREFIX }}:${{ needs.build-and-test.outputs.deploy_timestamp }}"
       HOST: ${{ vars.DEPLOY_HOST }}
       USER: ${{ vars.SETUP_USER }}
+      PORT: ${{ vars.DEPLOY_PORT }}
       SSH_KEY: ${{ secrets.SETUP_SSH_KEY }}
       DOCKER_STACK_FILE: "deploy/docker-stack.yml"
       CELERY_BROKER_URL: redis://${{ vars.REDIS_HOST }}:${{ vars.REDIS_PORT }}/0
@@ -153,8 +154,13 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+
+      - name: stack config
+          shell: bash
+          run: |
+           
+            envsubst < "${DOCKER_STACK_FILE}" | docker stack config -c -
        
-      
       - name: Login to GitHub Container Registry
         uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
         with:
@@ -190,7 +196,7 @@ jobs:
             docker network inspect ${STACK}_infra-net >/dev/null 2>&1 || \
             docker network create --driver overlay ${STACK}_infra-net
             
-            envsubst < "${DOCKER_STACK_FILE}" | docker stack config -c -
+            # envsubst < "${DOCKER_STACK_FILE}" | docker stack config -c -
 
             envsubst < "${DOCKER_STACK_FILE}" | docker stack deploy --with-registry-auth -c - "${STACK}"
             docker stack ls
