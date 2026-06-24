@@ -158,7 +158,7 @@ jobs:
         
       - name: stack config
         shell: bash
-          run: |
+        run: |
            
             envsubst < "${DOCKER_STACK_FILE}" | docker stack config -c -
        
