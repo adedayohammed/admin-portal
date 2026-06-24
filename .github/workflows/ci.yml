@@ -170,8 +170,8 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: deploy stack 
-        # env:
-        #   APP_DOCKER_IMAGE: ${{ inputs.docker-image }}
+        env:
+          APP_DOCKER_IMAGE: ${{ inputs.docker-image }}
         shell: bash
         run: |
             # ssh-keyscan "${HOST}" > "$HOME/.ssh/known_hosts"
@@ -212,7 +212,7 @@ jobs:
       STACK_PREFIX: "prod"
       STACK: "${{ vars.STACK_NAME }}"
       DOMAIN: ${{ vars.DOMAIN }}
-      APP_IMAGE: "${{ input.docker-image }}"
+      APP_IMAGE: ${{ inputs.docker-image }}
       HOST: ${{ vars.DEPLOY_HOST }}
       USER: ${{ vars.SETUP_USER }}
       PORT: ${{ vars.DEPLOY_PORT }}
@@ -263,8 +263,8 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: deploy stack 
-        env:
-          APP_DOCKER_IMAGE: ${{ inputs.docker-image }}
+        # env:
+        #   APP_DOCKER_IMAGE: ${{ inputs.docker-image }}
         shell: bash
         run: |
             # ssh-keyscan "${HOST}" > "$HOME/.ssh/known_hosts"
