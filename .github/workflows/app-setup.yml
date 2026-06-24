@@ -34,10 +34,10 @@ jobs:
           shell: bash
           run: |
 
-            DATA_VOLUME=$(echo "$DATA_VOLUME" | tr -d '\r')
+            DATA_VOLUME=$(echo "$LOG_VOLUME" | tr -d '\r')
 
-            ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -t -p ${PORT} -i ${SSH_KEY_FILE} ${USER}@${HOST} "DATA_VOLUME='${DATA_VOLUME}' bash -s" << 'EOF'
-            sudo mkdir -p ${DATA_VOLUME:?ERROR DATA_VOLUME NOT SET}
+            ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -t -p ${PORT} -i ${SSH_KEY_FILE} ${USER}@${HOST} "LOG_VOLUME='${LOG_VOLUME}' bash -s" << 'EOF'
+            sudo mkdir -p ${LOG_VOLUME:?ERROR LOG_VOLUME NOT SET}
             sudo chmod -R 0777 ${LOG_VOLUME}
 
             exit
