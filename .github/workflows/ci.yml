@@ -217,7 +217,7 @@ jobs:
       USER: ${{ vars.SETUP_USER }}
       PORT: ${{ vars.DEPLOY_PORT }}
       SSH_KEY: ${{ secrets.SETUP_SSH_KEY }}
-      DOCKER_STACK_FILE: "deploy/docker-stack.yml"
+      DOCKER_STACK_FILE: "./deploy/docker-stack.yml"
       CELERY_BROKER_URL: redis://${{ vars.REDIS_HOST }}:${{ vars.REDIS_PORT }}/0
       SECRET_KEY: ${{ secrets.SECRET_KEY }}
       DEBUG: ${{ vars.DEBUG }}

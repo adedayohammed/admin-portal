@@ -33,13 +33,11 @@ jobs:
           shell: bash
           run: |
 
-            ssh-keyscan "${HOST}" >> "$HOME/.ssh/known_hosts"
+            DATA_VOLUME=$(echo "$DATA_VOLUME" | tr -d '\r')
 
-            ssh -tt -i ${SSH_KEY_FILE} ${USER}@${HOST} << EOF
-            sudo mkdir -p ${LOG_VOLUME:?ERROR LOG_VOLUME NOT SET}
+            ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -t -p ${PORT} -i ${SSH_KEY_FILE} ${USER}@${HOST} "DATA_VOLUME='${DATA_VOLUME}' bash -s" << 'EOF'
+            sudo mkdir -p ${DATA_VOLUME:?ERROR DATA_VOLUME NOT SET}
             sudo chmod -R 0777 ${LOG_VOLUME}
-            # tree ${LOG_VOLUME}
+
             exit
-            exit
-            EOF
-                    
+            EOF                    
