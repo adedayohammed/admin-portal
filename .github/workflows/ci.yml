@@ -212,7 +212,7 @@ jobs:
       STACK_PREFIX: "prod"
       STACK: "${{ vars.STACK_NAME }}"
       DOMAIN: ${{ vars.DOMAIN }}
-      APP_IMAGE: ${{ inputs.docker-image }}
+      APP_IMAGE: ${{ github.event.inputs.docker-image }}
       HOST: ${{ vars.DEPLOY_HOST }}
       USER: ${{ vars.SETUP_USER }}
       PORT: ${{ vars.DEPLOY_PORT }}
@@ -239,7 +239,7 @@ jobs:
     steps:
 
       - name: checkout code
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # @v6
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
           persist-credentials: false
