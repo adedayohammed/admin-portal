@@ -56,6 +56,6 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      
+
   volumes:
-      - ${LOG_VOLUME:?ERROR LOG_VOLUME NOT SET!}:/app/logs
+      - ${LOG_VOLUME:?ERROR LOG_VOLUME NOT SET!}
